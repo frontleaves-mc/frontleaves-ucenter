@@ -154,6 +154,7 @@ func (h *UserHandler) GetAdminUserDetail(ctx *gin.Context) {
 		User: apiAdmin.AdminUserBasic{
 			ID:        raw.User.ID.String(),
 			Username:  raw.User.Username,
+			Avatar:    raw.User.Avatar,
 			Email:     raw.User.Email,
 			Phone:     raw.User.Phone,
 			RoleName:  raw.User.RoleName,

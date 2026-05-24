@@ -15,6 +15,7 @@ type AdminUserDetailResponse struct {
 type AdminUserBasic struct {
 	ID        string     `json:"id"`
 	Username  string     `json:"username"`
+	Avatar    *string    `json:"avatar"`
 	Email     *string    `json:"email"`
 	Phone     *string    `json:"phone"`
 	RoleName  *string    `json:"role_name"`

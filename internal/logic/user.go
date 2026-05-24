@@ -106,6 +106,13 @@ func (l *UserLogic) TakeUser(ctx context.Context, userinfo *bSdkModels.OAuthUser
 			needUpdate = true
 		}
 
+		ssoAvatar := extractAvatarFromRaw(userinfo.Raw)
+		if (user.Avatar == nil && ssoAvatar != nil) || (user.Avatar != nil && ssoAvatar == nil) ||
+			(user.Avatar != nil && ssoAvatar != nil && *user.Avatar != *ssoAvatar) {
+			user.Avatar = ssoAvatar
+			needUpdate = true
+		}
+
 		if needUpdate {
 			l.log.Info(ctx, "TakeUser - 检测到 SSO 用户信息变更，同步更新")
 			user, err = l.repo.user.Set(ctx, user)
@@ -130,6 +137,7 @@ func (l *UserLogic) TakeUser(ctx context.Context, userinfo *bSdkModels.OAuthUser
 		Username: userinfo.Nickname,
 		Email:    xUtil.Ptr(userinfo.Email),
 		Phone:    xUtil.Ptr(userinfo.Phone),
+		Avatar:   extractAvatarFromRaw(userinfo.Raw),
 		RoleName: xUtil.Ptr(entity.RolePlayer.String()),
 	}
 
@@ -271,6 +279,7 @@ func (l *UserLogic) ListAdminUsers(ctx context.Context, req *apiAdmin.AdminUserL
 		items[i] = apiAdmin.AdminUserItem{
 			ID:        u.ID.String(),
 			Username:  u.Username,
+			Avatar:    u.Avatar,
 			Email:     u.Email,
 			RoleName:  u.RoleName,
 			HasBan:    u.HasBan,
@@ -314,6 +323,14 @@ func (l *UserLogic) GetAdminUserDetailRaw(ctx context.Context, userID string) (*
 		SkinLibraries: aggregates.SkinLibraries,
 		CapeLibraries: aggregates.CapeLibraries,
 	}, nil
+}
+
+// extractAvatarFromRaw 从 SSO Raw 数据中安全提取 avatar URL。
+func extractAvatarFromRaw(raw map[string]any) *string {
+	if v, ok := raw["avatar"].(string); ok && v != "" {
+		return &v
+	}
+	return nil
 }
 
 // modelTypeToString 将 entity.ModelType 转为可读字符串。

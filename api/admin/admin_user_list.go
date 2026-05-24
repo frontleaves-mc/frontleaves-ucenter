@@ -24,6 +24,7 @@ type AdminUserListResponse struct {
 type AdminUserItem struct {
 	ID        string    `json:"id"`
 	Username  string    `json:"username"`
+	Avatar    *string   `json:"avatar"`
 	Email     *string   `json:"email"`
 	RoleName  *string   `json:"role_name"`
 	HasBan    bool      `json:"has_ban"`

@@ -17,6 +17,7 @@ type User struct {
 	GamePassword       string     `gorm:"not null;type:varchar(255);comment:游戏账户密码" json:"-"`                     // 游戏账户密码
 	HasBan             bool       `gorm:"not null;type:boolean;default:false;comment:用户是否被封禁禁止登录" json:"has_ban"` // 用户是否被封禁禁止登录
 	JailedAt           *time.Time `gorm:"type:timestamptz;comment:用户被监禁的时间" json:"jailed_at"`                     // 用户被监禁的时间
+	Avatar             *string    `gorm:"type:varchar(512);comment:用户头像 URL" json:"avatar"`                           // 用户头像 URL
 
 	// ----------
 	//  外键约束

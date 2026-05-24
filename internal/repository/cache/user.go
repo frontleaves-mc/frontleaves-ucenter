@@ -25,6 +25,7 @@ const (
 	userCacheFieldHasBan  = "has_ban"
 	userCacheFieldJailed  = "jailed_at"
 	userCacheFieldGamePwd = "game_password"
+	userCacheFieldAvatar  = "avatar"
 )
 
 // UserCache 用户实体缓存管理器
@@ -278,6 +279,9 @@ func buildUserFields(user *entity.User) map[string]any {
 	if user.GamePassword != "" {
 		fields[userCacheFieldGamePwd] = user.GamePassword
 	}
+	if user.Avatar != nil {
+		fields[userCacheFieldAvatar] = *user.Avatar
+	}
 	return fields
 }
 
@@ -328,6 +332,10 @@ func parseUserFields(fields map[string]string) (*entity.User, error) {
 	}
 	if value, ok := fields[userCacheFieldGamePwd]; ok && value != "" {
 		user.GamePassword = value
+	}
+	if value, ok := fields[userCacheFieldAvatar]; ok {
+		avatar := value
+		user.Avatar = &avatar
 	}
 	return user, nil
 }
