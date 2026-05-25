@@ -18,5 +18,6 @@ func (r *route) adminRouter(route gin.IRouter) {
 		adminGroup.GET("", userHandler.ListAdminUsers)
 		adminGroup.GET("/:user_id", userHandler.GetAdminUserDetail)
 		adminGroup.GET("/:user_id/game-profiles", userHandler.GetAdminUserGameProfiles)
+		adminGroup.PUT("/:user_id/role", userHandler.UpdateUserRole)
 	}
 }

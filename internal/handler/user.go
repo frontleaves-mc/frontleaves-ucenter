@@ -274,6 +274,57 @@ func (h *UserHandler) GetAdminUserGameProfiles(ctx *gin.Context) {
 	xResult.SuccessHasData(ctx, "获取用户游戏档案列表成功", response)
 }
 
+// UpdateUserRole 管理员调整用户角色
+//
+// @Summary     [超管] 调整用户角色
+// @Description 超级管理员调整指定用户的角色（仅允许在 PLAYER ↔ ADMIN 之间切换）
+// @Tags        管理员-用户接口
+// @Accept      json
+// @Produce     json
+// @Param       user_id path string true "目标用户 ID"
+// @Param       request body apiAdmin.AdminUpdateRoleRequest true "角色调整请求"
+// @Success     200 {object} xBase.BaseResponse{data=apiAdmin.AdminUpdateRoleResponse} "调整成功"
+// @Failure     400 {object} xBase.BaseResponse "请求参数错误"
+// @Failure     401 {object} xBase.BaseResponse "未授权"
+// @Failure     403 {object} xBase.BaseResponse "需要超级管理员权限"
+// @Failure     404 {object} xBase.BaseResponse "用户不存在"
+// @Security    BearerAuth
+// @Router      /admin/users/{user_id}/role [PUT]
+func (h *UserHandler) UpdateUserRole(ctx *gin.Context) {
+	h.log.Info(ctx, "UpdateUserRole - 管理员调整用户角色")
+
+	targetUserID, err := xSnowflake.ParseSnowflakeID(ctx.Param("user_id"))
+	if err != nil {
+		_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析目标用户 ID 失败", true, err))
+		return
+	}
+
+	req := xUtil.Bind(ctx, &apiAdmin.AdminUpdateRoleRequest{}).Data()
+	if req == nil {
+		return
+	}
+
+	userinfo, xErr := h.service.oauthLogic.Userinfo(ctx, bSdkUtil.GetAuthorization(ctx))
+	if xErr != nil {
+		_ = ctx.Error(xErr)
+		return
+	}
+
+	operatorID, err := xSnowflake.ParseSnowflakeID(userinfo.Sub)
+	if err != nil {
+		_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析操作者 ID 失败", true, err))
+		return
+	}
+
+	response, xErr := h.service.userLogic.UpdateRoleAdmin(ctx.Request.Context(), operatorID, targetUserID.String(), req.Role)
+	if xErr != nil {
+		_ = ctx.Error(xErr)
+		return
+	}
+
+	xResult.SuccessHasData(ctx, "调整用户角色成功", response)
+}
+
 // adminModelTypeToString 将 entity.ModelType 转为可读字符串。
 func adminModelTypeToString(mt uint8) string {
 	switch mt {

@@ -7,6 +7,7 @@ import (
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
+	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
 	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/cache"
 	"github.com/redis/go-redis/v9"
@@ -169,6 +170,41 @@ func (r *UserRepo) GetByPhone(ctx context.Context, tx *gorm.DB, phone string) (*
 		return nil, false, nil
 	}
 	return nil, false, xError.NewError(ctx, xError.DatabaseError, "根据手机号查询用户失败", true, err)
+}
+
+// UpdateRole 更新用户角色名称。
+//
+// 该方法仅更新 role_name 字段，更新完成后重新查询用户实体以刷新缓存。
+// 支持事务参数，当 tx 非空时在事务内执行更新。
+//
+// 参数:
+//   - ctx: 上下文对象
+//   - tx: 可选的事务对象（非空时使用事务连接）
+//   - id: 用户 ID
+//   - roleName: 新的角色名称
+//
+// 返回值:
+//   - *entity.User: 更新后的用户实体
+//   - *xError.Error: 操作过程中的错误
+func (r *UserRepo) UpdateRole(ctx context.Context, tx *gorm.DB, id string, roleName string) (*entity.User, *xError.Error) {
+	r.log.Info(ctx, "UpdateRole - 更新用户角色")
+
+	_, found, xErr := r.Get(ctx, id)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if !found {
+		return nil, xError.NewError(ctx, xError.ResourceNotFound, "用户不存在", true)
+	}
+	if err := r.pickDB(ctx, tx).Model(&entity.User{}).Where("id = ?", id).Update("role_name", roleName).Error; err != nil {
+		return nil, xError.NewError(ctx, xError.DatabaseError, "更新用户角色失败", true, err)
+	}
+
+	updatedUser, _, xErr := r.Get(ctx, id)
+	if xErr != nil {
+		return nil, xErr
+	}
+	return updatedUser, nil
 }
 
 // pickDB 根据事务参数选择数据库连接。
@@ -352,4 +388,32 @@ func (r *UserRepo) ListAdminEmails(ctx context.Context) ([]string, *xError.Error
 	}
 
 	return emails, nil
+}
+
+// FindIDsByKeyword 根据关键词模糊匹配用户名，返回匹配的用户 ID 列表。
+//
+// 仅对 username 字段做 ILIKE 模糊匹配，用于管理员列表查询中
+// 替代跨表 JOIN 的用户名筛选。
+//
+// 参数:
+//   - ctx: 上下文对象
+//   - keyword: 模糊匹配关键词
+//
+// 返回值:
+//   - []xSnowflake.SnowflakeID: 匹配的用户 ID 列表（无匹配时返回空切片）
+//   - *xError.Error: 查询过程中的错误
+func (r *UserRepo) FindIDsByKeyword(ctx context.Context, keyword string) ([]xSnowflake.SnowflakeID, *xError.Error) {
+	r.log.Info(ctx, "FindIDsByKeyword - 根据关键词查询用户 ID 列表")
+
+	var ids []xSnowflake.SnowflakeID
+	err := r.db.WithContext(ctx).
+		Model(&entity.User{}).
+		Where("username ILIKE ?", "%"+keyword+"%").
+		Pluck("id", &ids).
+		Error
+	if err != nil {
+		return nil, xError.NewError(ctx, xError.DatabaseError, "根据关键词查询用户 ID 列表失败", true, err)
+	}
+
+	return ids, nil
 }

@@ -295,6 +295,54 @@ func (l *UserLogic) ListAdminUsers(ctx context.Context, req *apiAdmin.AdminUserL
 	}, nil
 }
 
+// UpdateRoleAdmin 管理员调整用户角色。
+//
+// 该方法执行以下业务流程：
+//  1. 校验操作者不能修改自身角色（自我保护）
+//  2. 校验目标角色只允许 PLAYER 或 ADMIN
+//  3. 查询目标用户是否存在
+//  4. 校验目标用户不是超级管理员（不可降级）
+//  5. 委托 Repository 层更新角色并刷新缓存
+func (l *UserLogic) UpdateRoleAdmin(ctx context.Context, operatorID xSnowflake.SnowflakeID, targetUserID string, newRole string) (*apiAdmin.AdminUpdateRoleResponse, *xError.Error) {
+	l.log.Info(ctx, "UpdateRoleAdmin - 管理员调整用户角色")
+
+	// 自我保护：操作者不能修改自己的角色
+	if operatorID.String() == targetUserID {
+		return nil, xError.NewError(ctx, xError.PermissionDenied, "不能修改自己的角色", true)
+	}
+
+	// 校验目标角色合法性：仅允许 PLAYER 或 ADMIN
+	if newRole != entity.RolePlayer.String() && newRole != entity.RoleAdmin.String() {
+		return nil, xError.NewError(ctx, xError.ParameterError, "无效角色：只允许 PLAYER 或 ADMIN", true)
+	}
+
+	// 查询目标用户
+	user, found, xErr := l.repo.user.Get(ctx, targetUserID)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if !found {
+		return nil, xError.NewError(ctx, xError.ResourceNotFound, "用户不存在", true)
+	}
+
+	// 禁止修改超级管理员角色
+	if user.RoleName != nil && *user.RoleName == entity.RoleSuperAdmin.String() {
+		return nil, xError.NewError(ctx, xError.PermissionDenied, "不能修改超级管理员角色", true)
+	}
+
+	// 执行角色更新
+	updatedUser, xErr := l.repo.user.UpdateRole(ctx, nil, targetUserID, newRole)
+	if xErr != nil {
+		return nil, xErr
+	}
+
+	return &apiAdmin.AdminUpdateRoleResponse{
+		UserID:    updatedUser.ID.String(),
+		RoleName:  *updatedUser.RoleName,
+		UpdatedAt: updatedUser.UpdatedAt,
+	}, nil
+}
+
 // AdminUserDetailRaw 用户详情原始聚合数据（供 Handler 层组装最终响应）。
 type AdminUserDetailRaw struct {
 	User          *entity.User
