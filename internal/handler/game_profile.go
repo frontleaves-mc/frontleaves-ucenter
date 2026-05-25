@@ -5,6 +5,7 @@ import (
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xUtil "github.com/bamboo-services/bamboo-base-go/common/utility"
 	xResult "github.com/bamboo-services/bamboo-base-go/major/result"
+	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
 	apiUser "github.com/frontleaves-mc/frontleaves-yggleaf/api/user"
 	"github.com/gin-gonic/gin"
 	bSdkUtil "github.com/phalanx-labs/beacon-sso-sdk/utility"
@@ -390,4 +391,221 @@ func (h *GameProfileHandler) SetCape(ctx *gin.Context) {
 	}
 
 	xResult.SuccessHasData(ctx, "设置披风成功", gameProfileDTOToResponse(profile))
+}
+
+// ==================== Admin Game Profile Handlers ====================
+
+// ListAdminGameProfiles 管理员分页查询游戏档案列表
+//
+// @Summary     [超管] 游戏档案列表
+// @Description 管理员分页查询所有游戏档案，支持按关键词和 UUID 筛选
+// @Tags        管理员-游戏档案接口
+// @Accept      json
+// @Produce     json
+// @Param       page       query    int    false "页码"
+// @Param       page_size  query    int    false "每页数量"
+// @Param       keyword    query    string false "关键词（档案名/用户名）"
+// @Param       uuid       query    string false "UUID 精确筛选"
+// @Success     200 {object} xBase.BaseResponse{data=apiAdmin.AdminGameProfileListResponse} "查询成功"
+// @Failure     400 {object} xBase.BaseResponse "请求参数错误"
+// @Failure     401 {object} xBase.BaseResponse "未授权"
+// @Failure     403 {object} xBase.BaseResponse "需要超级管理员权限"
+// @Security    BearerAuth
+// @Router      /admin/game-profiles [GET]
+func (h *GameProfileHandler) ListAdminGameProfiles(ctx *gin.Context) {
+	h.log.Info(ctx, "ListAdminGameProfiles - 管理员查询游戏档案列表")
+
+	req := &apiAdmin.AdminGameProfileListRequest{}
+	if err := ctx.ShouldBindQuery(req); err != nil {
+		_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "请求参数错误", true, err))
+		return
+	}
+
+	page := req.Page
+	pageSize := req.PageSize
+	profiles, usernames, total, xErr := h.service.gameProfileLogic.ListAdminGameProfiles(ctx.Request.Context(), page, pageSize, req.Keyword, req.UUID)
+	if xErr != nil {
+		_ = ctx.Error(xErr)
+		return
+	}
+
+	items := make([]apiAdmin.AdminGameProfileListItem, 0, len(profiles))
+	for i := range profiles {
+		username := ""
+		if i < len(usernames) {
+			username = usernames[i]
+		}
+		items = append(items, adminGameProfileDTOToListItem(&profiles[i], username))
+	}
+
+	xResult.SuccessHasData(ctx, "查询游戏档案列表成功", apiAdmin.AdminGameProfileListResponse{
+		List:  items,
+		Total: total,
+		Page:  page,
+		Size:  pageSize,
+	})
+}
+
+// GetAdminGameProfileDetail 管理员获取游戏档案详情
+//
+// @Summary     [超管] 游戏档案详情
+// @Description 管理员根据档案 ID 获取游戏档案详情，包含关联的皮肤、披风和用户信息
+// @Tags        管理员-游戏档案接口
+// @Accept      json
+// @Produce     json
+// @Param       profile_id path string true "游戏档案 ID"
+// @Success     200 {object} xBase.BaseResponse{data=apiAdmin.AdminGameProfileDetailResponse} "获取成功"
+// @Failure     400 {object} xBase.BaseResponse "请求参数错误"
+// @Failure     401 {object} xBase.BaseResponse "未授权"
+// @Failure     403 {object} xBase.BaseResponse "需要超级管理员权限"
+// @Failure     404 {object} xBase.BaseResponse "游戏档案不存在"
+// @Security    BearerAuth
+// @Router      /admin/game-profiles/{profile_id} [GET]
+func (h *GameProfileHandler) GetAdminGameProfileDetail(ctx *gin.Context) {
+	h.log.Info(ctx, "GetAdminGameProfileDetail - 管理员获取游戏档案详情")
+
+	profileID, err := xSnowflake.ParseSnowflakeID(ctx.Param("profile_id"))
+	if err != nil {
+		_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析游戏档案 ID 失败", true, err))
+		return
+	}
+
+	dto, user, xErr := h.service.gameProfileLogic.GetAdminGameProfileDetail(ctx.Request.Context(), profileID)
+	if xErr != nil {
+		_ = ctx.Error(xErr)
+		return
+	}
+
+	xResult.SuccessHasData(ctx, "获取游戏档案详情成功", adminGameProfileDTOToDetailResponse(dto, user))
+}
+
+// AdminForceSetSkin 管理员强制设置游戏档案皮肤
+//
+// @Summary     [超管] 强制设置皮肤
+// @Description 管理员强制设置指定游戏档案的皮肤，传入 null 或空字符串为卸下
+// @Tags        管理员-游戏档案接口
+// @Accept      json
+// @Produce     json
+// @Param       profile_id path string true "游戏档案 ID"
+// @Param       request body apiAdmin.AdminForceSetSkinRequest true "设置皮肤请求"
+// @Success     200 {object} xBase.BaseResponse{data=apiAdmin.AdminGameProfileDetailResponse} "设置成功"
+// @Failure     400 {object} xBase.BaseResponse "请求参数错误"
+// @Failure     401 {object} xBase.BaseResponse "未授权"
+// @Failure     403 {object} xBase.BaseResponse "需要超级管理员权限或目标用户未拥有该皮肤"
+// @Failure     404 {object} xBase.BaseResponse "游戏档案不存在"
+// @Security    BearerAuth
+// @Router      /admin/game-profiles/{profile_id}/skin [PATCH]
+func (h *GameProfileHandler) AdminForceSetSkin(ctx *gin.Context) {
+	h.log.Info(ctx, "AdminForceSetSkin - 管理员强制设置皮肤")
+
+	profileID, err := xSnowflake.ParseSnowflakeID(ctx.Param("profile_id"))
+	if err != nil {
+		_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析游戏档案 ID 失败", true, err))
+		return
+	}
+
+	req := xUtil.Bind(ctx, &apiAdmin.AdminForceSetSkinRequest{}).Data()
+	if req == nil {
+		return
+	}
+
+	var skinLibraryID *xSnowflake.SnowflakeID
+	if req.SkinLibraryID != nil && *req.SkinLibraryID != "" {
+		parsed, parseErr := xSnowflake.ParseSnowflakeID(*req.SkinLibraryID)
+		if parseErr != nil {
+			_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析皮肤库 ID 失败", true, parseErr))
+			return
+		}
+		skinLibraryID = &parsed
+	}
+
+	dto, user, xErr := h.service.gameProfileLogic.AdminForceSetSkin(ctx.Request.Context(), profileID, skinLibraryID)
+	if xErr != nil {
+		_ = ctx.Error(xErr)
+		return
+	}
+
+	xResult.SuccessHasData(ctx, "强制设置皮肤成功", adminGameProfileDTOToDetailResponse(dto, user))
+}
+
+// AdminForceSetCape 管理员强制设置游戏档案披风
+//
+// @Summary     [超管] 强制设置披风
+// @Description 管理员强制设置指定游戏档案的披风，传入 null 或空字符串为卸下
+// @Tags        管理员-游戏档案接口
+// @Accept      json
+// @Produce     json
+// @Param       profile_id path string true "游戏档案 ID"
+// @Param       request body apiAdmin.AdminForceSetCapeRequest true "设置披风请求"
+// @Success     200 {object} xBase.BaseResponse{data=apiAdmin.AdminGameProfileDetailResponse} "设置成功"
+// @Failure     400 {object} xBase.BaseResponse "请求参数错误"
+// @Failure     401 {object} xBase.BaseResponse "未授权"
+// @Failure     403 {object} xBase.BaseResponse "需要超级管理员权限或目标用户未拥有该披风"
+// @Failure     404 {object} xBase.BaseResponse "游戏档案不存在"
+// @Security    BearerAuth
+// @Router      /admin/game-profiles/{profile_id}/cape [PATCH]
+func (h *GameProfileHandler) AdminForceSetCape(ctx *gin.Context) {
+	h.log.Info(ctx, "AdminForceSetCape - 管理员强制设置披风")
+
+	profileID, err := xSnowflake.ParseSnowflakeID(ctx.Param("profile_id"))
+	if err != nil {
+		_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析游戏档案 ID 失败", true, err))
+		return
+	}
+
+	req := xUtil.Bind(ctx, &apiAdmin.AdminForceSetCapeRequest{}).Data()
+	if req == nil {
+		return
+	}
+
+	var capeLibraryID *xSnowflake.SnowflakeID
+	if req.CapeLibraryID != nil && *req.CapeLibraryID != "" {
+		parsed, parseErr := xSnowflake.ParseSnowflakeID(*req.CapeLibraryID)
+		if parseErr != nil {
+			_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析披风库 ID 失败", true, parseErr))
+			return
+		}
+		capeLibraryID = &parsed
+	}
+
+	dto, user, xErr := h.service.gameProfileLogic.AdminForceSetCape(ctx.Request.Context(), profileID, capeLibraryID)
+	if xErr != nil {
+		_ = ctx.Error(xErr)
+		return
+	}
+
+	xResult.SuccessHasData(ctx, "强制设置披风成功", adminGameProfileDTOToDetailResponse(dto, user))
+}
+
+// AdminForceResetProfile 管理员强制重置游戏档案
+//
+// @Summary     [超管] 强制重置档案
+// @Description 管理员强制卸下指定游戏档案的皮肤和披风
+// @Tags        管理员-游戏档案接口
+// @Accept      json
+// @Produce     json
+// @Param       profile_id path string true "游戏档案 ID"
+// @Success     200 {object} xBase.BaseResponse{data=apiAdmin.AdminGameProfileDetailResponse} "重置成功"
+// @Failure     400 {object} xBase.BaseResponse "请求参数错误"
+// @Failure     401 {object} xBase.BaseResponse "未授权"
+// @Failure     403 {object} xBase.BaseResponse "需要超级管理员权限"
+// @Failure     404 {object} xBase.BaseResponse "游戏档案不存在"
+// @Security    BearerAuth
+// @Router      /admin/game-profiles/{profile_id}/reset [POST]
+func (h *GameProfileHandler) AdminForceResetProfile(ctx *gin.Context) {
+	h.log.Info(ctx, "AdminForceResetProfile - 管理员强制重置游戏档案")
+
+	profileID, err := xSnowflake.ParseSnowflakeID(ctx.Param("profile_id"))
+	if err != nil {
+		_ = ctx.Error(xError.NewError(ctx, xError.ParameterError, "解析游戏档案 ID 失败", true, err))
+		return
+	}
+
+	dto, user, xErr := h.service.gameProfileLogic.AdminForceResetProfile(ctx.Request.Context(), profileID)
+	if xErr != nil {
+		_ = ctx.Error(xErr)
+		return
+	}
+
+	xResult.SuccessHasData(ctx, "强制重置游戏档案成功", adminGameProfileDTOToDetailResponse(dto, user))
 }

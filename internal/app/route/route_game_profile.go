@@ -34,4 +34,17 @@ func (r *route) gameProfileRouter(route gin.IRouter) {
 	{
 		adminGroup.POST("/users/:user_id/quota", gameProfileHandler.AdjustQuotaAdmin)
 	}
+
+	// ---- 管理员游戏档案管理路由组 ----
+	adminGPGroup := route.Group("/admin/game-profiles")
+	adminGPGroup.Use(bSdkMiddle.CheckAuth(r.context))
+	adminGPGroup.Use(middleware.User(r.context))
+	adminGPGroup.Use(middleware.SuperAdmin(r.context))
+	{
+		adminGPGroup.GET("", gameProfileHandler.ListAdminGameProfiles)
+		adminGPGroup.GET("/:profile_id", gameProfileHandler.GetAdminGameProfileDetail)
+		adminGPGroup.PATCH("/:profile_id/skin", gameProfileHandler.AdminForceSetSkin)
+		adminGPGroup.PATCH("/:profile_id/cape", gameProfileHandler.AdminForceSetCape)
+		adminGPGroup.POST("/:profile_id/reset", gameProfileHandler.AdminForceResetProfile)
+	}
 }

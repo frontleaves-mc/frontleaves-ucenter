@@ -182,6 +182,75 @@ func (r *GameProfileRepo) UpdateCapeLibraryID(ctx context.Context, tx *gorm.DB, 
 	return updatedProfile, nil
 }
 
+// AdminGameProfileFilter 管理员游戏档案列表筛选条件。
+type AdminGameProfileFilter struct {
+	Name     *string                    // 档案名模糊匹配
+	UserIDs  []xSnowflake.SnowflakeID   // 用户 ID 列表（由 logic 层按用户名查询后传入）
+	UUID     *string                    // UUID 精确匹配
+}
+
+// ListAdmin 分页查询游戏档案列表（管理员用）。
+//
+// 支持按档案名模糊匹配、用户 ID 列表过滤和 UUID 精确筛选，
+// 默认按更新时间降序排列，预加载关联用户信息。
+// 用户名筛选由 logic 层先查 UserRepo 获取 user IDs 后传入，避免跨表 JOIN。
+func (r *GameProfileRepo) ListAdmin(ctx context.Context, tx *gorm.DB, page, pageSize int, filter AdminGameProfileFilter) ([]entity.GameProfile, int64, *xError.Error) {
+	r.log.Info(ctx, "ListAdmin - 管理员分页查询游戏档案列表")
+
+	query := r.pickDB(ctx, tx).Model(&entity.GameProfile{})
+
+	if filter.Name != nil && *filter.Name != "" && len(filter.UserIDs) > 0 {
+		query = query.Where("name ILIKE ? OR user_id IN ?", "%"+*filter.Name+"%", filter.UserIDs)
+	} else if filter.Name != nil && *filter.Name != "" {
+		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
+	} else if len(filter.UserIDs) > 0 {
+		query = query.Where("user_id IN ?", filter.UserIDs)
+	}
+	if filter.UUID != nil && *filter.UUID != "" {
+		query = query.Where("uuid = ?", *filter.UUID)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, xError.NewError(ctx, xError.DatabaseError, "查询游戏档案总数失败", true, err)
+	}
+
+	var profiles []entity.GameProfile
+	offset := (page - 1) * pageSize
+	if err := query.Preload("User").
+		Order("updated_at DESC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&profiles).Error; err != nil {
+		return nil, 0, xError.NewError(ctx, xError.DatabaseError, "查询游戏档案列表失败", true, err)
+	}
+
+	return profiles, total, nil
+}
+
+// GetDetailByIDAdmin 根据档案 ID 查询游戏档案详情（管理员用，无用户归属限制）。
+//
+// 预加载关联皮肤库、披风库和用户信息。
+func (r *GameProfileRepo) GetDetailByIDAdmin(ctx context.Context, tx *gorm.DB, profileID xSnowflake.SnowflakeID) (*entity.GameProfile, bool, *xError.Error) {
+	r.log.Info(ctx, "GetDetailByIDAdmin - 管理员获取游戏档案详情")
+
+	var profile entity.GameProfile
+	err := r.pickDB(ctx, tx).
+		Model(&entity.GameProfile{}).
+		Preload("SkinLibrary").
+		Preload("CapeLibrary").
+		Preload("User").
+		Where("id = ?", profileID).
+		First(&profile).Error
+	if err == nil {
+		return &profile, true, nil
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, false, nil
+	}
+	return nil, false, xError.NewError(ctx, xError.DatabaseError, "查询游戏档案详情失败", true, err)
+}
+
 func (r *GameProfileRepo) pickDB(ctx context.Context, tx *gorm.DB) *gorm.DB {
 	if tx != nil {
 		return tx.WithContext(ctx)

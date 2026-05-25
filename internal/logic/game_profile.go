@@ -36,6 +36,7 @@ type gameProfileRepo struct {
 	userSkinLib       *repository.UserSkinLibraryRepo        // 用户皮肤关联仓储
 	userCapeLib       *repository.UserCapeLibraryRepo        // 用户披风关联仓储
 	onlineProfileRepo *repository.GameOnlineProfileRepo      // 正版档案缓存仓储（Mojang 回退）
+	user              *repository.UserRepo                   // 用户仓储（用于按用户名查询 user IDs）
 	txn               *repotxn.GameProfileTxnRepo           // 游戏档案事务协调仓储
 }
 
@@ -77,6 +78,7 @@ func NewGameProfileLogic(ctx context.Context, libraryLogic *LibraryLogic) *GameP
 	userSkinLibRepo := repository.NewUserSkinLibraryRepo(db)
 	userCapeLibRepo := repository.NewUserCapeLibraryRepo(db)
 	onlineProfileRepo := repository.NewGameOnlineProfileRepo(db)
+	userRepo := repository.NewUserRepo(db, rdb)
 
 	return &GameProfileLogic{
 		logic: logic{
@@ -90,6 +92,7 @@ func NewGameProfileLogic(ctx context.Context, libraryLogic *LibraryLogic) *GameP
 			userSkinLib:       userSkinLibRepo,
 			userCapeLib:       userCapeLibRepo,
 			onlineProfileRepo: onlineProfileRepo,
+			user:              userRepo,
 			txn:               repotxn.NewGameProfileTxnRepo(db, profileRepo, quotaRepo, quotaLogRepo),
 		},
 		libraryLogic: libraryLogic,
@@ -623,6 +626,258 @@ func (l *GameProfileLogic) fillOnlineFallback(ctx context.Context, resp *models.
 			TextureURL: *onlineProfile.CapeURL,
 		}
 	}
+}
+
+// ListAdminGameProfiles 管理员分页查询游戏档案列表。
+//
+// 该方法执行以下业务流程：
+//  1. 规范化分页参数（默认 page=1, pageSize=20, 最大 pageSize=100）
+//  2. 构建筛选条件并委托 Repository 层分页查询
+//  3. 将实体转换为轻量 DTO 列表（不做纹理解析，仅列表展示）
+//
+// 参数:
+//   - ctx: 上下文对象。
+//   - page: 页码。
+//   - pageSize: 每页数量。
+//   - keyword: 关键词筛选（档案名/用户名模糊匹配）。
+//   - uuid: UUID 精确筛选。
+//
+// 返回值:
+//   - []models.GameProfileDTO: 轻量 DTO 列表。
+//   - int64: 总记录数。
+//   - *xError.Error: 错误信息。
+func (l *GameProfileLogic) ListAdminGameProfiles(ctx context.Context, page, pageSize int, keyword, uuid string) ([]models.GameProfileDTO, []string, int64, *xError.Error) {
+	l.log.Info(ctx, "ListAdminGameProfiles - 管理员分页查询游戏档案列表")
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	filter := repository.AdminGameProfileFilter{}
+	if keyword != "" {
+		filter.Name = &keyword
+		userIDs, xErr := l.repo.user.FindIDsByKeyword(ctx, keyword)
+		if xErr != nil {
+			return nil, nil, 0, xErr
+		}
+		filter.UserIDs = userIDs
+	}
+	if uuid != "" {
+		filter.UUID = &uuid
+	}
+
+	profiles, total, xErr := l.repo.profile.ListAdmin(ctx, nil, page, pageSize, filter)
+	if xErr != nil {
+		return nil, nil, 0, xErr
+	}
+
+	dtos := make([]models.GameProfileDTO, 0, len(profiles))
+	usernames := make([]string, 0, len(profiles))
+	for _, p := range profiles {
+		dtos = append(dtos, models.GameProfileDTO{
+			ID:            p.ID,
+			UserID:        p.UserID,
+			UUID:          p.UUID.String(),
+			Name:          p.Name,
+			SkinLibraryID: p.SkinLibraryID,
+			CapeLibraryID: p.CapeLibraryID,
+			UpdatedAt:     p.UpdatedAt,
+		})
+		username := ""
+		if p.User != nil {
+			username = p.User.Username
+		}
+		usernames = append(usernames, username)
+	}
+
+	return dtos, usernames, total, nil
+}
+
+// GetAdminGameProfileDetail 管理员获取游戏档案详情。
+//
+// 该方法执行以下业务流程：
+//  1. 委托 Repository 层查询档案详情（含预加载关联数据）
+//  2. 若档案不存在，返回 ResourceNotFound 错误
+//  3. 调用 buildProfileDTO 解析纹理链接
+//
+// 参数:
+//   - ctx: 上下文对象。
+//   - profileID: 游戏档案 ID。
+//
+// 返回值:
+//   - *models.GameProfileDTO: 包含完整纹理信息的 DTO。
+//   - *xError.Error: 错误信息。
+func (l *GameProfileLogic) GetAdminGameProfileDetail(ctx context.Context, profileID xSnowflake.SnowflakeID) (*models.GameProfileDTO, *entity.User, *xError.Error) {
+	l.log.Info(ctx, "GetAdminGameProfileDetail - 管理员获取游戏档案详情")
+
+	profile, found, xErr := l.repo.profile.GetDetailByIDAdmin(ctx, nil, profileID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "游戏档案不存在", true)
+	}
+
+	dto, xErr := l.buildProfileDTO(ctx, profile)
+	return dto, profile.User, xErr
+}
+
+// AdminForceSetSkin 管理员强制设置游戏档案皮肤。
+//
+// 该方法执行以下业务流程：
+//  1. 查询目标档案并验证存在性
+//  2. 若指定了皮肤库 ID，校验目标用户是否拥有该皮肤
+//  3. 更新档案的 SkinLibraryID
+//  4. 重新查询并返回完整 DTO
+//
+// 参数:
+//   - ctx: 上下文对象。
+//   - profileID: 游戏档案 ID。
+//   - skinLibraryID: 皮肤库 ID（nil 表示卸下）。
+//
+// 返回值:
+//   - *models.GameProfileDTO: 更新后的完整 DTO。
+//   - *xError.Error: 错误信息。
+func (l *GameProfileLogic) AdminForceSetSkin(ctx context.Context, profileID xSnowflake.SnowflakeID, skinLibraryID *xSnowflake.SnowflakeID) (*models.GameProfileDTO, *entity.User, *xError.Error) {
+	l.log.Info(ctx, "AdminForceSetSkin - 管理员强制设置皮肤")
+
+	// 1. 查询目标档案并验证存在性
+	profile, found, xErr := l.repo.profile.GetDetailByIDAdmin(ctx, nil, profileID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "游戏档案不存在", true)
+	}
+
+	// 2. 若指定了皮肤库 ID，校验目标用户是否拥有该皮肤
+	if skinLibraryID != nil && !skinLibraryID.IsZero() {
+		hasSkin, xErr := l.repo.userSkinLib.ExistsByUserAndSkin(ctx, nil, profile.UserID, *skinLibraryID)
+		if xErr != nil {
+			return nil, nil, xErr
+		}
+		if !hasSkin {
+			return nil, nil, xError.NewError(ctx, xError.PermissionDenied, "目标用户未拥有该皮肤", true)
+		}
+	}
+
+	// 3. 更新档案的 SkinLibraryID
+	_, xErr = l.repo.profile.UpdateSkinLibraryID(ctx, nil, profileID, skinLibraryID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	// 4. 重新查询并返回完整 DTO
+	profile, found, xErr = l.repo.profile.GetDetailByIDAdmin(ctx, nil, profileID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "游戏档案不存在", true)
+	}
+	dto, xErr := l.buildProfileDTO(ctx, profile)
+	return dto, profile.User, xErr
+}
+
+// AdminForceSetCape 管理员强制设置游戏档案披风。
+//
+// 同构于 AdminForceSetSkin，Skin → Cape。
+func (l *GameProfileLogic) AdminForceSetCape(ctx context.Context, profileID xSnowflake.SnowflakeID, capeLibraryID *xSnowflake.SnowflakeID) (*models.GameProfileDTO, *entity.User, *xError.Error) {
+	l.log.Info(ctx, "AdminForceSetCape - 管理员强制设置披风")
+
+	// 1. 查询目标档案并验证存在性
+	profile, found, xErr := l.repo.profile.GetDetailByIDAdmin(ctx, nil, profileID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "游戏档案不存在", true)
+	}
+
+	// 2. 若指定了披风库 ID，校验目标用户是否拥有该披风
+	if capeLibraryID != nil && !capeLibraryID.IsZero() {
+		hasCape, xErr := l.repo.userCapeLib.ExistsByUserAndCape(ctx, nil, profile.UserID, *capeLibraryID)
+		if xErr != nil {
+			return nil, nil, xErr
+		}
+		if !hasCape {
+			return nil, nil, xError.NewError(ctx, xError.PermissionDenied, "目标用户未拥有该披风", true)
+		}
+	}
+
+	// 3. 更新档案的 CapeLibraryID
+	_, xErr = l.repo.profile.UpdateCapeLibraryID(ctx, nil, profileID, capeLibraryID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	// 4. 重新查询并返回完整 DTO
+	profile, found, xErr = l.repo.profile.GetDetailByIDAdmin(ctx, nil, profileID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "游戏档案不存在", true)
+	}
+	dto, xErr := l.buildProfileDTO(ctx, profile)
+	return dto, profile.User, xErr
+}
+
+// AdminForceResetProfile 管理员强制重置游戏档案（卸下皮肤和披风）。
+//
+// 该方法执行以下业务流程：
+//  1. 查询目标档案并验证存在性
+//  2. 卸下皮肤（SkinLibraryID 设为 nil）
+//  3. 卸下披风（CapeLibraryID 设为 nil）
+//  4. 重新查询并返回完整 DTO
+//
+// 参数:
+//   - ctx: 上下文对象。
+//   - profileID: 游戏档案 ID。
+//
+// 返回值:
+//   - *models.GameProfileDTO: 重置后的完整 DTO。
+//   - *xError.Error: 错误信息。
+func (l *GameProfileLogic) AdminForceResetProfile(ctx context.Context, profileID xSnowflake.SnowflakeID) (*models.GameProfileDTO, *entity.User, *xError.Error) {
+	l.log.Info(ctx, "AdminForceResetProfile - 管理员强制重置游戏档案")
+
+	// 1. 查询目标档案并验证存在性
+	_, found, xErr := l.repo.profile.GetDetailByIDAdmin(ctx, nil, profileID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "游戏档案不存在", true)
+	}
+
+	// 2. 卸下皮肤
+	_, xErr = l.repo.profile.UpdateSkinLibraryID(ctx, nil, profileID, nil)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	// 3. 卸下披风
+	_, xErr = l.repo.profile.UpdateCapeLibraryID(ctx, nil, profileID, nil)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	// 4. 重新查询并返回完整 DTO
+	profile, found, xErr := l.repo.profile.GetDetailByIDAdmin(ctx, nil, profileID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "游戏档案不存在", true)
+	}
+	dto, xErr := l.buildProfileDTO(ctx, profile)
+	return dto, profile.User, xErr
 }
 
 // validateGameProfileName 校验并规范化游戏档案用户名。

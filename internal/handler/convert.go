@@ -1,9 +1,12 @@
 package handler
 
 import (
+	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
+	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
 	apiIssue "github.com/frontleaves-mc/frontleaves-yggleaf/api/issue"
 	apiLibrary "github.com/frontleaves-mc/frontleaves-yggleaf/api/library"
 	apiUser "github.com/frontleaves-mc/frontleaves-yggleaf/api/user"
+	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
 	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/models"
 )
 
@@ -227,4 +230,47 @@ func issueTypeDTOToResponse(dto *models.IssueTypeDTO) apiIssue.IssueTypeListItem
 		Description: dto.Description,
 		SortOrder:   dto.SortOrder,
 	}
+}
+
+// ==================== Admin Game Profile Convert Functions ====================
+
+func ptrSnowflakeToString(id *xSnowflake.SnowflakeID) *string {
+	if id == nil {
+		return nil
+	}
+	s := id.String()
+	return &s
+}
+
+func adminGameProfileDTOToListItem(dto *models.GameProfileDTO, username string) apiAdmin.AdminGameProfileListItem {
+	return apiAdmin.AdminGameProfileListItem{
+		ID:            dto.ID.String(),
+		UserID:        dto.UserID.String(),
+		Username:      username,
+		UUID:          dto.UUID,
+		Name:          dto.Name,
+		SkinLibraryID: ptrSnowflakeToString(dto.SkinLibraryID),
+		CapeLibraryID: ptrSnowflakeToString(dto.CapeLibraryID),
+		UpdatedAt:     dto.UpdatedAt,
+	}
+}
+
+func adminGameProfileDTOToDetailResponse(dto *models.GameProfileDTO, user *entity.User) apiAdmin.AdminGameProfileDetailResponse {
+	resp := apiAdmin.AdminGameProfileDetailResponse{
+		ID:            dto.ID.String(),
+		UserID:        dto.UserID.String(),
+		UUID:          dto.UUID,
+		Name:          dto.Name,
+		SkinLibraryID: ptrSnowflakeToString(dto.SkinLibraryID),
+		CapeLibraryID: ptrSnowflakeToString(dto.CapeLibraryID),
+		UpdatedAt:     dto.UpdatedAt,
+	}
+	if user != nil {
+		resp.User = apiAdmin.AdminGameProfileUser{
+			ID:       user.ID.String(),
+			Username: user.Username,
+			Avatar:   user.Avatar,
+		}
+	}
+	return resp
 }
