@@ -176,6 +176,85 @@ func (r *CapeLibraryRepo) CountPrivateByUserID(ctx context.Context, tx *gorm.DB,
 	return count, nil
 }
 
+// AdminCapeLibraryFilter 管理员查询披风库记录的过滤条件。
+type AdminCapeLibraryFilter struct {
+	Name     *string
+	IsPublic *bool
+	UserID   *xSnowflake.SnowflakeID
+	IsSystem *bool
+}
+
+// ListAdmin 管理员查询披风库记录列表。
+func (r *CapeLibraryRepo) ListAdmin(ctx context.Context, tx *gorm.DB, page int, pageSize int, filter AdminCapeLibraryFilter) ([]entity.CapeLibrary, int64, *xError.Error) {
+	r.log.Info(ctx, "ListAdmin - 管理员查询披风库记录列表")
+
+	var total int64
+	query := r.pickDB(ctx, tx).Model(&entity.CapeLibrary{})
+
+	if filter.Name != nil {
+		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
+	}
+	if filter.IsPublic != nil {
+		query = query.Where("is_public = ?", *filter.IsPublic)
+	}
+	if filter.IsSystem != nil {
+		if *filter.IsSystem {
+			query = query.Where("user_id IS NULL")
+		} else {
+			query = query.Where("user_id IS NOT NULL")
+		}
+	} else if filter.UserID != nil {
+		query = query.Where("user_id = ?", *filter.UserID)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, xError.NewError(ctx, xError.DatabaseError, "查询披风库记录总数失败", true, err)
+	}
+
+	var capes []entity.CapeLibrary
+	offset := (page - 1) * pageSize
+	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&capes).Error; err != nil {
+		return nil, 0, xError.NewError(ctx, xError.DatabaseError, "查询披风库记录列表失败", true, err)
+	}
+	return capes, total, nil
+}
+
+// UpdateTexture 更新披风库记录的纹理。
+func (r *CapeLibraryRepo) UpdateTexture(ctx context.Context, tx *gorm.DB, capeID xSnowflake.SnowflakeID, texture int64, textureHash string) *xError.Error {
+	r.log.Info(ctx, "UpdateTexture - 更新披风库记录纹理")
+
+	updates := map[string]interface{}{
+		"texture":      texture,
+		"texture_hash": textureHash,
+	}
+	if err := r.pickDB(ctx, tx).Model(&entity.CapeLibrary{}).Where("id = ?", capeID).Updates(updates).Error; err != nil {
+		return xError.NewError(ctx, xError.DatabaseError, "更新披风库记录纹理失败", true, err)
+	}
+	return nil
+}
+
+// CountUserAssociations 统计披风关联的用户披风库记录数量。
+func (r *CapeLibraryRepo) CountUserAssociations(ctx context.Context, tx *gorm.DB, capeID xSnowflake.SnowflakeID) (int64, *xError.Error) {
+	r.log.Info(ctx, "CountUserAssociations - 统计披风关联的用户披风库记录数量")
+
+	var count int64
+	if err := r.pickDB(ctx, tx).Model(&entity.UserCapeLibrary{}).Where("cape_library_id = ?", capeID).Count(&count).Error; err != nil {
+		return 0, xError.NewError(ctx, xError.DatabaseError, "统计披风关联的用户披风库记录数量失败", true, err)
+	}
+	return count, nil
+}
+
+// CountGameProfileEquipped 统计披风被游戏档案装备的数量。
+func (r *CapeLibraryRepo) CountGameProfileEquipped(ctx context.Context, tx *gorm.DB, capeID xSnowflake.SnowflakeID) (int64, *xError.Error) {
+	r.log.Info(ctx, "CountGameProfileEquipped - 统计披风被游戏档案装备的数量")
+
+	var count int64
+	if err := r.pickDB(ctx, tx).Model(&entity.GameProfile{}).Where("cape_library_id = ?", capeID).Count(&count).Error; err != nil {
+		return 0, xError.NewError(ctx, xError.DatabaseError, "统计披风被游戏档案装备的数量失败", true, err)
+	}
+	return count, nil
+}
+
 func (r *CapeLibraryRepo) pickDB(ctx context.Context, tx *gorm.DB) *gorm.DB {
 	if tx != nil {
 		return tx.WithContext(ctx)

@@ -176,6 +176,89 @@ func (r *SkinLibraryRepo) CountPrivateByUserID(ctx context.Context, tx *gorm.DB,
 	return count, nil
 }
 
+// AdminSkinLibraryFilter 管理员查询皮肤库的过滤器。
+type AdminSkinLibraryFilter struct {
+	Name     *string
+	IsPublic *bool
+	UserID   *xSnowflake.SnowflakeID
+	IsSystem *bool
+}
+
+// ListAdmin 管理员分页查询皮肤库记录列表。
+func (r *SkinLibraryRepo) ListAdmin(ctx context.Context, tx *gorm.DB, page int, pageSize int, filter AdminSkinLibraryFilter) ([]entity.SkinLibrary, int64, *xError.Error) {
+	r.log.Info(ctx, "ListAdmin - 管理员分页查询皮肤库列表")
+
+	query := r.pickDB(ctx, tx).Model(&entity.SkinLibrary{})
+
+	// 动态构建 WHERE 条件
+	if filter.Name != nil {
+		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
+	}
+	if filter.IsPublic != nil {
+		query = query.Where("is_public = ?", *filter.IsPublic)
+	}
+	// IsSystem 和 UserID 同时设置时，IsSystem 优先级更高
+	if filter.IsSystem != nil {
+		if *filter.IsSystem {
+			query = query.Where("user_id IS NULL") // 系统资源
+		} else {
+			query = query.Where("user_id IS NOT NULL") // 用户资源
+		}
+	} else if filter.UserID != nil {
+		query = query.Where("user_id = ?", *filter.UserID)
+	}
+
+	// 统计总数
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, xError.NewError(ctx, xError.DatabaseError, "查询皮肤库记录总数失败", true, err)
+	}
+
+	// 分页查询
+	var skins []entity.SkinLibrary
+	offset := (page - 1) * pageSize
+	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&skins).Error; err != nil {
+		return nil, 0, xError.NewError(ctx, xError.DatabaseError, "查询皮肤库记录列表失败", true, err)
+	}
+	return skins, total, nil
+}
+
+// UpdateTexture 更新皮肤库记录的纹理信息。
+func (r *SkinLibraryRepo) UpdateTexture(ctx context.Context, tx *gorm.DB, skinID xSnowflake.SnowflakeID, texture int64, textureHash string) *xError.Error {
+	r.log.Info(ctx, "UpdateTexture - 更新皮肤库记录纹理信息")
+
+	updates := map[string]interface{}{
+		"texture":      texture,
+		"texture_hash": textureHash,
+	}
+	if err := r.pickDB(ctx, tx).Model(&entity.SkinLibrary{}).Where("id = ?", skinID).Updates(updates).Error; err != nil {
+		return xError.NewError(ctx, xError.DatabaseError, "更新皮肤库记录失败", true, err)
+	}
+	return nil
+}
+
+// CountUserAssociations 统计皮肤库关联的用户数量。
+func (r *SkinLibraryRepo) CountUserAssociations(ctx context.Context, tx *gorm.DB, skinID xSnowflake.SnowflakeID) (int64, *xError.Error) {
+	r.log.Info(ctx, "CountUserAssociations - 统计皮肤库关联的用户数量")
+
+	var count int64
+	if err := r.pickDB(ctx, tx).Model(&entity.UserSkinLibrary{}).Where("skin_library_id = ?", skinID).Count(&count).Error; err != nil {
+		return 0, xError.NewError(ctx, xError.DatabaseError, "统计皮肤库关联用户数量失败", true, err)
+	}
+	return count, nil
+}
+
+// CountGameProfileEquipped 统计装备该皮肤的游戏档案数量。
+func (r *SkinLibraryRepo) CountGameProfileEquipped(ctx context.Context, tx *gorm.DB, skinID xSnowflake.SnowflakeID) (int64, *xError.Error) {
+	r.log.Info(ctx, "CountGameProfileEquipped - 统计装备该皮肤的游戏档案数量")
+
+	var count int64
+	if err := r.pickDB(ctx, tx).Model(&entity.GameProfile{}).Where("skin_library_id = ?", skinID).Count(&count).Error; err != nil {
+		return 0, xError.NewError(ctx, xError.DatabaseError, "统计装备该皮肤的游戏档案数量失败", true, err)
+	}
+	return count, nil
+}
+
 func (r *SkinLibraryRepo) pickDB(ctx context.Context, tx *gorm.DB) *gorm.DB {
 	if tx != nil {
 		return tx.WithContext(ctx)

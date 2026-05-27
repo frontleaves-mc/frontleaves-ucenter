@@ -56,6 +56,26 @@ func (r *route) libraryRouter(route gin.IRouter) {
 			// 管理员查询用户资源
 			adminGroup.GET("/users/:user_id/skins", libraryHandler.ListUserSkins)
 			adminGroup.GET("/users/:user_id/capes", libraryHandler.ListUserCapes)
+
+			// 管理员资源库 CRUD - 皮肤
+			adminSkinGroup := adminGroup.Group("/skins")
+			{
+				adminSkinGroup.GET("", libraryHandler.AdminListSkins)
+				adminSkinGroup.POST("", libraryHandler.AdminCreateSkin)
+				adminSkinGroup.GET("/:skin_id", libraryHandler.AdminGetSkinDetail)
+				adminSkinGroup.PATCH("/:skin_id", libraryHandler.AdminUpdateSkin)
+				adminSkinGroup.DELETE("/:skin_id", libraryHandler.AdminDeleteSkin)
+			}
+
+			// 管理员资源库 CRUD - 披风
+			adminCapeGroup := adminGroup.Group("/capes")
+			{
+				adminCapeGroup.GET("", libraryHandler.AdminListCapes)
+				adminCapeGroup.POST("", libraryHandler.AdminCreateCape)
+				adminCapeGroup.GET("/:cape_id", libraryHandler.AdminGetCapeDetail)
+				adminCapeGroup.PATCH("/:cape_id", libraryHandler.AdminUpdateCape)
+				adminCapeGroup.DELETE("/:cape_id", libraryHandler.AdminDeleteCape)
+			}
 		}
 	}
 }

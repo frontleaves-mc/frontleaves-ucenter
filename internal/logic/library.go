@@ -14,6 +14,7 @@ import (
 	xEnv "github.com/bamboo-services/bamboo-base-go/defined/env"
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
+	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
 	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
 	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/models"
 	entityType "github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity/type"
@@ -42,6 +43,7 @@ type libraryRepo struct {
 	quotaRepo    *repository.LibraryQuotaRepo    // 资源库配额仓储
 	userSkinRepo *repository.UserSkinLibraryRepo // 用户皮肤关联仓储
 	userCapeRepo *repository.UserCapeLibraryRepo // 用户披风关联仓储
+	profileRepo  *repository.GameProfileRepo     // 游戏档案仓储（管理员资源详情用）
 	txn          *repotxn.LibraryTxnRepo         // 资源库事务协调仓储
 }
 
@@ -92,6 +94,7 @@ func NewLibraryLogic(ctx context.Context) *LibraryLogic {
 	quotaRepo := repository.NewLibraryQuotaRepo(db)
 	userSkinRepo := repository.NewUserSkinLibraryRepo(db)
 	userCapeRepo := repository.NewUserCapeLibraryRepo(db)
+	profileRepo := repository.NewGameProfileRepo(db)
 
 	return &LibraryLogic{
 		logic: logic{
@@ -104,6 +107,7 @@ func NewLibraryLogic(ctx context.Context) *LibraryLogic {
 			quotaRepo:    quotaRepo,
 			userSkinRepo: userSkinRepo,
 			userCapeRepo: userCapeRepo,
+			profileRepo:  profileRepo,
 			txn: repotxn.NewLibraryTxnRepo(
 				db, skinRepo, capeRepo, quotaRepo,
 				userSkinRepo, userCapeRepo,
@@ -1128,6 +1132,609 @@ func (l *LibraryLogic) ListUserCapes(ctx context.Context, userID xSnowflake.Snow
 	}
 
 	return responses, total, nil
+}
+
+// ==================== Admin Library CRUD ====================
+
+// AdminEquippedProfileResult 管理员资源详情中的装备档案信息。
+type AdminEquippedProfileResult struct {
+	ID       string
+	UUID     string
+	Name     string
+	UserID   string
+	Username string
+}
+
+// adminSkinFilterToRepo 将 API 层的皮肤过滤条件转换为 Repository 层的过滤结构。
+func (l *LibraryLogic) adminSkinFilterToRepo(filter apiAdmin.AdminSkinFilter) repository.AdminSkinLibraryFilter {
+	var repoFilter repository.AdminSkinLibraryFilter
+	if filter.Name != nil {
+		repoFilter.Name = filter.Name
+	}
+	repoFilter.IsPublic = filter.IsPublic
+	repoFilter.IsSystem = filter.IsSystem
+	if filter.UserID != nil {
+		repoFilter.UserID = filter.UserID
+	}
+	return repoFilter
+}
+
+// adminCapeFilterToRepo 将 API 层的披风过滤条件转换为 Repository 层的过滤结构。
+func (l *LibraryLogic) adminCapeFilterToRepo(filter apiAdmin.AdminCapeFilter) repository.AdminCapeLibraryFilter {
+	var repoFilter repository.AdminCapeLibraryFilter
+	if filter.Name != nil {
+		repoFilter.Name = filter.Name
+	}
+	repoFilter.IsPublic = filter.IsPublic
+	repoFilter.IsSystem = filter.IsSystem
+	if filter.UserID != nil {
+		repoFilter.UserID = filter.UserID
+	}
+	return repoFilter
+}
+
+// buildEquippedProfileResults 将 GameProfile 实体列表转换为 AdminEquippedProfileResult 列表。
+func (l *LibraryLogic) buildEquippedProfileResults(profiles []entity.GameProfile) []AdminEquippedProfileResult {
+	results := make([]AdminEquippedProfileResult, 0, len(profiles))
+	for _, profile := range profiles {
+		result := AdminEquippedProfileResult{
+			ID:     strconv.FormatInt(int64(profile.ID), 10),
+			UUID:   profile.UUID.String(),
+			Name:   profile.Name,
+			UserID: strconv.FormatInt(int64(profile.UserID), 10),
+		}
+		if profile.User != nil {
+			result.Username = profile.User.Username
+		}
+		results = append(results, result)
+	}
+	return results
+}
+
+// AdminCreateSkin 管理员创建系统皮肤。
+//
+// 该方法执行以下业务流程：
+//  1. 校验并规范化皮肤名称
+//  2. 校验模型类型合法性（Classic / Slim）
+//  3. 解码 Base64 纹理数据
+//  4. 计算 SHA256 纹理哈希并检查唯一性
+//  5. 上传纹理到对象存储（事务外执行）
+//  6. 创建 SkinLibrary 记录（UserID 为 nil，标识系统资源）
+//  7. 确认文件转为永久态
+//
+// 注意：管理员创建不涉及配额扣减和用户关联，无需事务包裹。
+func (l *LibraryLogic) AdminCreateSkin(ctx context.Context, name string, modelType uint8, texture string, isPublic *bool) (*models.SkinDTO, *xError.Error) {
+	l.log.Info(ctx, "AdminCreateSkin - 管理员创建皮肤")
+
+	validatedName, xErr := l.validateSkinName(ctx, name)
+	if xErr != nil {
+		return nil, xErr
+	}
+
+	model := entity.ModelType(modelType)
+	if model != entity.ModelTypeClassic && model != entity.ModelTypeSlim {
+		return nil, xError.NewError(ctx, xError.ParameterError, "无效皮肤模型类型", true)
+	}
+
+	textureData, xErr := l.decodeBase64Texture(ctx, texture)
+	if xErr != nil {
+		return nil, xErr
+	}
+	textureHash := l.calculateTextureHash(textureData)
+
+	// 检查纹理哈希唯一性
+	existingSkin, found, xErr := l.repo.skinRepo.GetByTextureHash(ctx, nil, textureHash)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if found {
+		return nil, xError.NewError(ctx, xError.DataConflict,
+			xError.ErrMessage(fmt.Sprintf("纹理已存在(skinID=%d)", existingSkin.ID)), true)
+	}
+
+	// 上传到对象存储（事务外执行）
+	skinBucketId := xEnv.GetEnvString(bConst.EnvBucketSkinBucketId, "")
+	skinPathId := xEnv.GetEnvString(bConst.EnvBucketSkinPathId, "")
+	if skinBucketId == "" || skinPathId == "" {
+		return nil, xError.NewError(ctx, xError.ServerInternalError, "皮肤纹理存储配置缺失，请联系管理员", true)
+	}
+	uploadResp, err := l.helper.bucket.Normal.Upload(ctx, &bBucketApi.UploadRequest{
+		BucketId:      skinBucketId,
+		PathId:        skinPathId,
+		ContentBase64: texture,
+	})
+	if err != nil {
+		return nil, mapBucketError(ctx, "上传皮肤纹理失败", err)
+	}
+
+	skinId, err := strconv.ParseInt(uploadResp.FileId, 10, 64)
+	if err != nil {
+		return nil, xError.NewError(ctx, xError.ServerInternalError, "解析纹理文件 ID 失败", true, err)
+	}
+
+	isPublicVal := false
+	if isPublic != nil {
+		isPublicVal = *isPublic
+	}
+
+	skin := &entity.SkinLibrary{
+		UserID:      nil, // 系统资源：UserID 为 nil
+		Name:        validatedName,
+		Texture:     skinId,
+		TextureHash: textureHash,
+		Model:       model,
+		IsPublic:    isPublicVal,
+	}
+
+	// 直接调用 skinRepo.Create，不经过 txn（无配额操作）
+	createdSkin, xErr := l.repo.skinRepo.Create(ctx, nil, skin)
+	if xErr != nil {
+		return nil, xErr
+	}
+
+	// DB 写入成功后确认文件转为永久态
+	l.cacheVerifyFile(ctx, uploadResp.FileId)
+
+	// 直接从 UploadResponse 构建 DTO，复用上传返回的下载链接
+	var skinDTO *models.SkinDTO
+	if uploadResp.GetObj() != nil && uploadResp.GetObj().GetLink() != "" {
+		skinDTO = &models.SkinDTO{
+			ID:          createdSkin.ID,
+			UserID:      createdSkin.UserID,
+			Name:        createdSkin.Name,
+			TextureURL:  uploadResp.GetObj().GetLink(),
+			TextureHash: createdSkin.TextureHash,
+			Model:       createdSkin.Model,
+			IsPublic:    createdSkin.IsPublic,
+			UpdatedAt:   createdSkin.UpdatedAt,
+		}
+	} else {
+		skinDTO, xErr = l.buildSkinDTO(ctx, createdSkin)
+		if xErr != nil {
+			return nil, xErr
+		}
+	}
+	return skinDTO, nil
+}
+
+// AdminCreateCape 管理员创建系统披风。
+//
+// 与 AdminCreateSkin 类似，但无模型类型参数。
+// 管理员创建不涉及配额扣减和用户关联，无需事务包裹。
+func (l *LibraryLogic) AdminCreateCape(ctx context.Context, name string, texture string, isPublic *bool) (*models.CapeDTO, *xError.Error) {
+	l.log.Info(ctx, "AdminCreateCape - 管理员创建披风")
+
+	validatedName, xErr := l.validateCapeName(ctx, name)
+	if xErr != nil {
+		return nil, xErr
+	}
+
+	textureData, xErr := l.decodeBase64Texture(ctx, texture)
+	if xErr != nil {
+		return nil, xErr
+	}
+	textureHash := l.calculateTextureHash(textureData)
+
+	// 检查纹理哈希唯一性
+	existingCape, found, xErr := l.repo.capeRepo.GetByTextureHash(ctx, nil, textureHash)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if found {
+		return nil, xError.NewError(ctx, xError.DataConflict,
+			xError.ErrMessage(fmt.Sprintf("纹理已存在(capeID=%d)", existingCape.ID)), true)
+	}
+
+	// 上传到对象存储（事务外执行）
+	capeBucketId := xEnv.GetEnvString(bConst.EnvBucketCapeBucketId, "")
+	capePathId := xEnv.GetEnvString(bConst.EnvBucketCapePathId, "")
+	if capeBucketId == "" || capePathId == "" {
+		return nil, xError.NewError(ctx, xError.ServerInternalError, "披风纹理存储配置缺失，请联系管理员", true)
+	}
+	uploadResp, err := l.helper.bucket.Normal.Upload(ctx, &bBucketApi.UploadRequest{
+		BucketId:      capeBucketId,
+		PathId:        capePathId,
+		ContentBase64: texture,
+	})
+	if err != nil {
+		return nil, mapBucketError(ctx, "上传披风纹理失败", err)
+	}
+
+	capeId, err := strconv.ParseInt(uploadResp.FileId, 10, 64)
+	if err != nil {
+		return nil, xError.NewError(ctx, xError.ServerInternalError, "解析纹理文件 ID 失败", true, err)
+	}
+
+	isPublicVal := false
+	if isPublic != nil {
+		isPublicVal = *isPublic
+	}
+
+	cape := &entity.CapeLibrary{
+		UserID:      nil, // 系统资源：UserID 为 nil
+		Name:        validatedName,
+		Texture:     capeId,
+		TextureHash: textureHash,
+		IsPublic:    isPublicVal,
+	}
+
+	// 直接调用 capeRepo.Create，不经过 txn（无配额操作）
+	createdCape, xErr := l.repo.capeRepo.Create(ctx, nil, cape)
+	if xErr != nil {
+		return nil, xErr
+	}
+
+	// DB 写入成功后确认文件转为永久态
+	l.cacheVerifyFile(ctx, uploadResp.FileId)
+
+	// 直接从 UploadResponse 构建 DTO
+	var capeDTO *models.CapeDTO
+	if uploadResp.GetObj() != nil && uploadResp.GetObj().GetLink() != "" {
+		capeDTO = &models.CapeDTO{
+			ID:          createdCape.ID,
+			UserID:      createdCape.UserID,
+			Name:        createdCape.Name,
+			TextureURL:  uploadResp.GetObj().GetLink(),
+			TextureHash: createdCape.TextureHash,
+			IsPublic:    createdCape.IsPublic,
+			UpdatedAt:   createdCape.UpdatedAt,
+		}
+	} else {
+		capeDTO, xErr = l.buildCapeDTO(ctx, createdCape)
+		if xErr != nil {
+			return nil, xErr
+		}
+	}
+	return capeDTO, nil
+}
+
+// AdminListSkins 管理员分页查询皮肤列表。
+//
+// 支持按名称、公开状态、用户 ID、系统资源等条件过滤。
+func (l *LibraryLogic) AdminListSkins(ctx context.Context, filter apiAdmin.AdminSkinFilter, page int, pageSize int) ([]models.SkinDTO, int64, *xError.Error) {
+	l.log.Info(ctx, "AdminListSkins - 管理员查询皮肤列表")
+
+	repoFilter := l.adminSkinFilterToRepo(filter)
+	skins, total, xErr := l.repo.skinRepo.ListAdmin(ctx, nil, page, pageSize, repoFilter)
+	if xErr != nil {
+		return nil, 0, xErr
+	}
+
+	responses, xErr := l.buildSkinDTOs(ctx, skins)
+	if xErr != nil {
+		return nil, 0, xErr
+	}
+
+	return responses, total, nil
+}
+
+// AdminListCapes 管理员分页查询披风列表。
+//
+// 支持按名称、公开状态、用户 ID、系统资源等条件过滤。
+func (l *LibraryLogic) AdminListCapes(ctx context.Context, filter apiAdmin.AdminCapeFilter, page int, pageSize int) ([]models.CapeDTO, int64, *xError.Error) {
+	l.log.Info(ctx, "AdminListCapes - 管理员查询披风列表")
+
+	repoFilter := l.adminCapeFilterToRepo(filter)
+	capes, total, xErr := l.repo.capeRepo.ListAdmin(ctx, nil, page, pageSize, repoFilter)
+	if xErr != nil {
+		return nil, 0, xErr
+	}
+
+	responses, xErr := l.buildCapeDTOs(ctx, capes)
+	if xErr != nil {
+		return nil, 0, xErr
+	}
+
+	return responses, total, nil
+}
+
+// AdminGetSkinDetail 管理员获取皮肤详情（含装备档案列表）。
+func (l *LibraryLogic) AdminGetSkinDetail(ctx context.Context, skinID xSnowflake.SnowflakeID) (*models.SkinDTO, []AdminEquippedProfileResult, *xError.Error) {
+	l.log.Info(ctx, "AdminGetSkinDetail - 管理员获取皮肤详情")
+
+	skin, found, xErr := l.repo.skinRepo.GetByID(ctx, nil, skinID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "皮肤不存在", true)
+	}
+
+	skinDTO, xErr := l.buildSkinDTO(ctx, skin)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	// 查询装备该皮肤的游戏档案（含用户信息）
+	profiles, xErr := l.repo.profileRepo.ListBySkinLibraryID(ctx, nil, skinID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	equippedResults := l.buildEquippedProfileResults(profiles)
+	return skinDTO, equippedResults, nil
+}
+
+// AdminGetCapeDetail 管理员获取披风详情（含装备档案列表）。
+func (l *LibraryLogic) AdminGetCapeDetail(ctx context.Context, capeID xSnowflake.SnowflakeID) (*models.CapeDTO, []AdminEquippedProfileResult, *xError.Error) {
+	l.log.Info(ctx, "AdminGetCapeDetail - 管理员获取披风详情")
+
+	cape, found, xErr := l.repo.capeRepo.GetByID(ctx, nil, capeID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+	if !found {
+		return nil, nil, xError.NewError(ctx, xError.ResourceNotFound, "披风不存在", true)
+	}
+
+	capeDTO, xErr := l.buildCapeDTO(ctx, cape)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	// 查询装备该披风的游戏档案（含用户信息）
+	profiles, xErr := l.repo.profileRepo.ListByCapeLibraryID(ctx, nil, capeID)
+	if xErr != nil {
+		return nil, nil, xErr
+	}
+
+	equippedResults := l.buildEquippedProfileResults(profiles)
+	return capeDTO, equippedResults, nil
+}
+
+// AdminUpdateSkin 管理员更新皮肤属性。
+//
+// 支持更新名称、公开状态和纹理。纹理更新时：
+//   - 解码新纹理 → 计算哈希 → 唯一性检查（排除自身） → 上传新文件 → 更新记录
+//   - 旧纹理文件不会被删除（安全策略）
+func (l *LibraryLogic) AdminUpdateSkin(ctx context.Context, skinID xSnowflake.SnowflakeID, name *string, isPublic *bool, texture *string) (*models.SkinDTO, *xError.Error) {
+	l.log.Info(ctx, "AdminUpdateSkin - 管理员更新皮肤")
+
+	// 获取现有记录
+	skin, found, xErr := l.repo.skinRepo.GetByID(ctx, nil, skinID)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if !found {
+		return nil, xError.NewError(ctx, xError.ResourceNotFound, "皮肤不存在", true)
+	}
+
+	// 更新纹理（如果提供了新纹理）
+	if texture != nil && *texture != "" {
+		textureData, xErr := l.decodeBase64Texture(ctx, *texture)
+		if xErr != nil {
+			return nil, xErr
+		}
+		newHash := l.calculateTextureHash(textureData)
+
+		// 检查哈希唯一性（排除自身）
+		existingSkin, hashFound, xErr := l.repo.skinRepo.GetByTextureHash(ctx, nil, newHash)
+		if xErr != nil {
+			return nil, xErr
+		}
+		if hashFound && existingSkin.ID != skinID {
+			return nil, xError.NewError(ctx, xError.DataConflict, "纹理已存在", true)
+		}
+
+		// 上传新纹理到对象存储
+		skinBucketId := xEnv.GetEnvString(bConst.EnvBucketSkinBucketId, "")
+		skinPathId := xEnv.GetEnvString(bConst.EnvBucketSkinPathId, "")
+		if skinBucketId == "" || skinPathId == "" {
+			return nil, xError.NewError(ctx, xError.ServerInternalError, "皮肤纹理存储配置缺失，请联系管理员", true)
+		}
+		uploadResp, err := l.helper.bucket.Normal.Upload(ctx, &bBucketApi.UploadRequest{
+			BucketId:      skinBucketId,
+			PathId:        skinPathId,
+			ContentBase64: *texture,
+		})
+		if err != nil {
+			return nil, mapBucketError(ctx, "上传皮肤纹理失败", err)
+		}
+
+		newTextureID, err := strconv.ParseInt(uploadResp.FileId, 10, 64)
+		if err != nil {
+			return nil, xError.NewError(ctx, xError.ServerInternalError, "解析纹理文件 ID 失败", true, err)
+		}
+
+		// 更新纹理记录
+		xErr = l.repo.skinRepo.UpdateTexture(ctx, nil, skinID, newTextureID, newHash)
+		if xErr != nil {
+			return nil, xErr
+		}
+
+		// 确认新文件转为永久态（旧文件不删除 — 安全策略）
+		l.cacheVerifyFile(ctx, uploadResp.FileId)
+	}
+
+	// 更新名称或公开状态（如果提供了新值）
+	if name != nil || isPublic != nil {
+		newNameVal := skin.Name
+		newIsPublicVal := skin.IsPublic
+
+		if name != nil {
+			validatedName, xErr := l.validateSkinName(ctx, *name)
+			if xErr != nil {
+				return nil, xErr
+			}
+			newNameVal = validatedName
+		}
+
+		if isPublic != nil {
+			newIsPublicVal = *isPublic
+		}
+
+		// 短路：仅当值确实变化时才更新
+		if newNameVal != skin.Name || newIsPublicVal != skin.IsPublic {
+			_, xErr = l.repo.skinRepo.UpdateNameAndIsPublic(ctx, nil, skinID, newNameVal, newIsPublicVal)
+			if xErr != nil {
+				return nil, xErr
+			}
+		}
+	}
+
+	// 重新获取更新后的记录
+	updatedSkin, found, xErr := l.repo.skinRepo.GetByID(ctx, nil, skinID)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if !found {
+		return nil, xError.NewError(ctx, xError.ResourceNotFound, "皮肤不存在", true)
+	}
+
+	return l.buildSkinDTO(ctx, updatedSkin)
+}
+
+// AdminUpdateCape 管理员更新披风属性。
+//
+// 与 AdminUpdateSkin 逻辑对称，但无模型类型。
+func (l *LibraryLogic) AdminUpdateCape(ctx context.Context, capeID xSnowflake.SnowflakeID, name *string, isPublic *bool, texture *string) (*models.CapeDTO, *xError.Error) {
+	l.log.Info(ctx, "AdminUpdateCape - 管理员更新披风")
+
+	// 获取现有记录
+	cape, found, xErr := l.repo.capeRepo.GetByID(ctx, nil, capeID)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if !found {
+		return nil, xError.NewError(ctx, xError.ResourceNotFound, "披风不存在", true)
+	}
+
+	// 更新纹理（如果提供了新纹理）
+	if texture != nil && *texture != "" {
+		textureData, xErr := l.decodeBase64Texture(ctx, *texture)
+		if xErr != nil {
+			return nil, xErr
+		}
+		newHash := l.calculateTextureHash(textureData)
+
+		// 检查哈希唯一性（排除自身）
+		existingCape, hashFound, xErr := l.repo.capeRepo.GetByTextureHash(ctx, nil, newHash)
+		if xErr != nil {
+			return nil, xErr
+		}
+		if hashFound && existingCape.ID != capeID {
+			return nil, xError.NewError(ctx, xError.DataConflict, "纹理已存在", true)
+		}
+
+		// 上传新纹理到对象存储
+		capeBucketId := xEnv.GetEnvString(bConst.EnvBucketCapeBucketId, "")
+		capePathId := xEnv.GetEnvString(bConst.EnvBucketCapePathId, "")
+		if capeBucketId == "" || capePathId == "" {
+			return nil, xError.NewError(ctx, xError.ServerInternalError, "披风纹理存储配置缺失，请联系管理员", true)
+		}
+		uploadResp, err := l.helper.bucket.Normal.Upload(ctx, &bBucketApi.UploadRequest{
+			BucketId:      capeBucketId,
+			PathId:        capePathId,
+			ContentBase64: *texture,
+		})
+		if err != nil {
+			return nil, mapBucketError(ctx, "上传披风纹理失败", err)
+		}
+
+		newTextureID, err := strconv.ParseInt(uploadResp.FileId, 10, 64)
+		if err != nil {
+			return nil, xError.NewError(ctx, xError.ServerInternalError, "解析纹理文件 ID 失败", true, err)
+		}
+
+		// 更新纹理记录
+		xErr = l.repo.capeRepo.UpdateTexture(ctx, nil, capeID, newTextureID, newHash)
+		if xErr != nil {
+			return nil, xErr
+		}
+
+		// 确认新文件转为永久态（旧文件不删除 — 安全策略）
+		l.cacheVerifyFile(ctx, uploadResp.FileId)
+	}
+
+	// 更新名称或公开状态（如果提供了新值）
+	if name != nil || isPublic != nil {
+		newNameVal := cape.Name
+		newIsPublicVal := cape.IsPublic
+
+		if name != nil {
+			validatedName, xErr := l.validateCapeName(ctx, *name)
+			if xErr != nil {
+				return nil, xErr
+			}
+			newNameVal = validatedName
+		}
+
+		if isPublic != nil {
+			newIsPublicVal = *isPublic
+		}
+
+		// 短路：仅当值确实变化时才更新
+		if newNameVal != cape.Name || newIsPublicVal != cape.IsPublic {
+			_, xErr = l.repo.capeRepo.UpdateNameAndIsPublic(ctx, nil, capeID, newNameVal, newIsPublicVal)
+			if xErr != nil {
+				return nil, xErr
+			}
+		}
+	}
+
+	// 重新获取更新后的记录
+	updatedCape, found, xErr := l.repo.capeRepo.GetByID(ctx, nil, capeID)
+	if xErr != nil {
+		return nil, xErr
+	}
+	if !found {
+		return nil, xError.NewError(ctx, xError.ResourceNotFound, "披风不存在", true)
+	}
+
+	return l.buildCapeDTO(ctx, updatedCape)
+}
+
+// AdminDeleteSkin 管理员删除皮肤。
+//
+// 委托 txn 层在事务内完成安全检查（是否有用户关联、是否有档案装备），
+// 事务成功后同步清理 Bucket 中的纹理文件。
+func (l *LibraryLogic) AdminDeleteSkin(ctx context.Context, skinID xSnowflake.SnowflakeID) *xError.Error {
+	l.log.Info(ctx, "AdminDeleteSkin - 管理员删除皮肤")
+
+	// 获取皮肤记录（用于后续删除文件）
+	skin, found, xErr := l.repo.skinRepo.GetByID(ctx, nil, skinID)
+	if xErr != nil {
+		return xErr
+	}
+	if !found {
+		return xError.NewError(ctx, xError.ResourceNotFound, "皮肤不存在", true)
+	}
+
+	// 委托 txn 层在事务内完成安全删除
+	xErr = l.repo.txn.AdminDeleteSkinWithCheck(ctx, skinID)
+	if xErr != nil {
+		return xErr
+	}
+
+	// 事务成功后清理 Bucket 文件
+	l.deleteBucketFile(ctx, skin.Texture)
+	return nil
+}
+
+// AdminDeleteCape 管理员删除披风。
+//
+// 与 AdminDeleteSkin 逻辑对称。
+func (l *LibraryLogic) AdminDeleteCape(ctx context.Context, capeID xSnowflake.SnowflakeID) *xError.Error {
+	l.log.Info(ctx, "AdminDeleteCape - 管理员删除披风")
+
+	// 获取披风记录（用于后续删除文件）
+	cape, found, xErr := l.repo.capeRepo.GetByID(ctx, nil, capeID)
+	if xErr != nil {
+		return xErr
+	}
+	if !found {
+		return xError.NewError(ctx, xError.ResourceNotFound, "披风不存在", true)
+	}
+
+	// 委托 txn 层在事务内完成安全删除
+	xErr = l.repo.txn.AdminDeleteCapeWithCheck(ctx, capeID)
+	if xErr != nil {
+		return xErr
+	}
+
+	// 事务成功后清理 Bucket 文件
+	l.deleteBucketFile(ctx, cape.Texture)
+	return nil
 }
 
 // ==================== Helper Methods ====================

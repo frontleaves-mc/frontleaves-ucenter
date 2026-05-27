@@ -217,7 +217,7 @@ func (r *GameProfileRepo) ListAdmin(ctx context.Context, tx *gorm.DB, page, page
 
 	var profiles []entity.GameProfile
 	offset := (page - 1) * pageSize
-	if err := query.Preload("User").
+	if err := query.
 		Order("updated_at DESC").
 		Offset(offset).
 		Limit(pageSize).
@@ -249,6 +249,26 @@ func (r *GameProfileRepo) GetDetailByIDAdmin(ctx context.Context, tx *gorm.DB, p
 		return nil, false, nil
 	}
 	return nil, false, xError.NewError(ctx, xError.DatabaseError, "查询游戏档案详情失败", true, err)
+}
+
+func (r *GameProfileRepo) ListBySkinLibraryID(ctx context.Context, tx *gorm.DB, skinLibraryID xSnowflake.SnowflakeID) ([]entity.GameProfile, *xError.Error) {
+	r.log.Info(ctx, "ListBySkinLibraryID - 根据皮肤库 ID 获取游戏档案列表")
+
+	var profiles []entity.GameProfile
+	if err := r.pickDB(ctx, tx).Model(&entity.GameProfile{}).Where("skin_library_id = ?", skinLibraryID).Preload("User").Order("created_at ASC").Find(&profiles).Error; err != nil {
+		return nil, xError.NewError(ctx, xError.DatabaseError, "查询游戏档案列表失败", true, err)
+	}
+	return profiles, nil
+}
+
+func (r *GameProfileRepo) ListByCapeLibraryID(ctx context.Context, tx *gorm.DB, capeLibraryID xSnowflake.SnowflakeID) ([]entity.GameProfile, *xError.Error) {
+	r.log.Info(ctx, "ListByCapeLibraryID - 根据披风库 ID 获取游戏档案列表")
+
+	var profiles []entity.GameProfile
+	if err := r.pickDB(ctx, tx).Model(&entity.GameProfile{}).Where("cape_library_id = ?", capeLibraryID).Preload("User").Order("created_at ASC").Find(&profiles).Error; err != nil {
+		return nil, xError.NewError(ctx, xError.DatabaseError, "查询游戏档案列表失败", true, err)
+	}
+	return profiles, nil
 }
 
 func (r *GameProfileRepo) pickDB(ctx context.Context, tx *gorm.DB) *gorm.DB {

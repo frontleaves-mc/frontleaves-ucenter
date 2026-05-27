@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"strconv"
+
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
 	apiIssue "github.com/frontleaves-mc/frontleaves-yggleaf/api/issue"
 	apiLibrary "github.com/frontleaves-mc/frontleaves-yggleaf/api/library"
 	apiUser "github.com/frontleaves-mc/frontleaves-yggleaf/api/user"
 	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic"
 	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/models"
 )
 
@@ -273,4 +276,77 @@ func adminGameProfileDTOToDetailResponse(dto *models.GameProfileDTO, user *entit
 		}
 	}
 	return resp
+}
+
+// ==================== Admin Library Convert Functions ====================
+
+// adminSkinFilterFromRequest 将请求参数转换为 AdminSkinFilter。
+func adminSkinFilterFromRequest(req apiAdmin.AdminSkinListRequest) apiAdmin.AdminSkinFilter {
+	filter := apiAdmin.AdminSkinFilter{}
+	if req.Name != "" {
+		filter.Name = &req.Name
+	}
+	filter.IsPublic = req.IsPublic
+	filter.IsSystem = req.IsSystem
+	if req.UserID != "" {
+		uid, err := strconv.ParseInt(req.UserID, 10, 64)
+		if err == nil {
+			snowflakeID := xSnowflake.SnowflakeID(uid)
+			filter.UserID = &snowflakeID
+		}
+	}
+	return filter
+}
+
+// adminCapeFilterFromRequest 将请求参数转换为 AdminCapeFilter。
+func adminCapeFilterFromRequest(req apiAdmin.AdminCapeListRequest) apiAdmin.AdminCapeFilter {
+	filter := apiAdmin.AdminCapeFilter{}
+	if req.Name != "" {
+		filter.Name = &req.Name
+	}
+	filter.IsPublic = req.IsPublic
+	filter.IsSystem = req.IsSystem
+	if req.UserID != "" {
+		uid, err := strconv.ParseInt(req.UserID, 10, 64)
+		if err == nil {
+			snowflakeID := xSnowflake.SnowflakeID(uid)
+			filter.UserID = &snowflakeID
+		}
+	}
+	return filter
+}
+
+// adminEquippedProfileToResponse 将 AdminEquippedProfileResult 转换为响应 DTO。
+func adminEquippedProfileToResponse(result logic.AdminEquippedProfileResult) apiAdmin.AdminEquippedProfile {
+	return apiAdmin.AdminEquippedProfile{
+		ID:       result.ID,
+		UUID:     result.UUID,
+		Name:     result.Name,
+		UserID:   result.UserID,
+		Username: result.Username,
+	}
+}
+
+// adminSkinDetailToResponse 将 SkinDTO + 装备档案列表构建为详情响应。
+func adminSkinDetailToResponse(skinDTO *models.SkinDTO, profiles []logic.AdminEquippedProfileResult) apiAdmin.AdminSkinDetailResponse {
+	equipped := make([]apiAdmin.AdminEquippedProfile, len(profiles))
+	for i, p := range profiles {
+		equipped[i] = adminEquippedProfileToResponse(p)
+	}
+	return apiAdmin.AdminSkinDetailResponse{
+		SkinResponse:     skinDTOToResponse(skinDTO),
+		EquippedProfiles: equipped,
+	}
+}
+
+// adminCapeDetailToResponse 将 CapeDTO + 装备档案列表构建为详情响应。
+func adminCapeDetailToResponse(capeDTO *models.CapeDTO, profiles []logic.AdminEquippedProfileResult) apiAdmin.AdminCapeDetailResponse {
+	equipped := make([]apiAdmin.AdminEquippedProfile, len(profiles))
+	for i, p := range profiles {
+		equipped[i] = adminEquippedProfileToResponse(p)
+	}
+	return apiAdmin.AdminCapeDetailResponse{
+		CapeResponse:     capeDTOToResponse(capeDTO),
+		EquippedProfiles: equipped,
+	}
 }

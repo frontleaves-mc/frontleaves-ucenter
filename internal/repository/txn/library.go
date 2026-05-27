@@ -2,6 +2,7 @@ package txn
 
 import (
 	"context"
+	"fmt"
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
@@ -1019,6 +1020,122 @@ func (t *LibraryTxnRepo) RecalculateQuota(
 	}
 	if err != nil {
 		return xError.NewError(ctx, xError.DatabaseError, "重算配额失败", true, err)
+	}
+	return nil
+}
+
+// AdminDeleteSkinWithCheck 在事务内完成管理员安全删除皮肤。
+//
+// 事务序列：检查用户关联 → 检查游戏档案装备 → 如有则返回错误 → 无关联则删除。
+// 管理员删除不影响配额（系统资源不计入配额）。
+func (t *LibraryTxnRepo) AdminDeleteSkinWithCheck(
+	ctx context.Context,
+	skinID xSnowflake.SnowflakeID,
+) *xError.Error {
+	t.log.Info(ctx, "AdminDeleteSkinWithCheck - 事务内安全删除皮肤")
+
+	var bizErr *xError.Error
+
+	err := t.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 1. 检查用户关联
+		userAssoc, xErr := t.skinRepo.CountUserAssociations(ctx, tx, skinID)
+		if xErr != nil {
+			bizErr = xErr
+			return xErr
+		}
+
+		// 2. 检查游戏档案装备
+		profileCount, xErr := t.skinRepo.CountGameProfileEquipped(ctx, tx, skinID)
+		if xErr != nil {
+			bizErr = xErr
+			return xErr
+		}
+
+		// 3. 如有关联则返回错误
+		if userAssoc > 0 || profileCount > 0 {
+			var errorMsg string
+			if userAssoc > 0 && profileCount > 0 {
+				errorMsg = fmt.Sprintf("该皮肤仍有 %d 个用户关联和 %d 个游戏档案装备，无法删除", userAssoc, profileCount)
+			} else if userAssoc > 0 {
+				errorMsg = fmt.Sprintf("该皮肤仍有 %d 个用户关联，无法删除", userAssoc)
+			} else {
+				errorMsg = fmt.Sprintf("该皮肤仍有 %d 个游戏档案装备，无法删除", profileCount)
+			}
+			bizErr = xError.NewError(ctx, xError.DataConflict, xError.ErrMessage(errorMsg), true, nil)
+			return bizErr
+		}
+
+		// 4. 无关联则删除皮肤记录
+		bizErr = t.skinRepo.DeleteByID(ctx, tx, skinID)
+		if bizErr != nil {
+			return bizErr
+		}
+
+		return nil
+	})
+	if bizErr != nil {
+		return bizErr
+	}
+	if err != nil {
+		return xError.NewError(ctx, xError.DatabaseError, "删除皮肤失败", true, err)
+	}
+	return nil
+}
+
+// AdminDeleteCapeWithCheck 在事务内完成管理员安全删除披风。
+//
+// 事务序列：检查用户关联 → 检查游戏档案装备 → 如有则返回错误 → 无关联则删除。
+// 管理员删除不影响配额（系统资源不计入配额）。
+func (t *LibraryTxnRepo) AdminDeleteCapeWithCheck(
+	ctx context.Context,
+	capeID xSnowflake.SnowflakeID,
+) *xError.Error {
+	t.log.Info(ctx, "AdminDeleteCapeWithCheck - 事务内安全删除披风")
+
+	var bizErr *xError.Error
+
+	err := t.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 1. 检查用户关联
+		userAssoc, xErr := t.capeRepo.CountUserAssociations(ctx, tx, capeID)
+		if xErr != nil {
+			bizErr = xErr
+			return xErr
+		}
+
+		// 2. 检查游戏档案装备
+		profileCount, xErr := t.capeRepo.CountGameProfileEquipped(ctx, tx, capeID)
+		if xErr != nil {
+			bizErr = xErr
+			return xErr
+		}
+
+		// 3. 如有关联则返回错误
+		if userAssoc > 0 || profileCount > 0 {
+			var errorMsg string
+			if userAssoc > 0 && profileCount > 0 {
+				errorMsg = fmt.Sprintf("该披风仍有 %d 个用户关联和 %d 个游戏档案装备，无法删除", userAssoc, profileCount)
+			} else if userAssoc > 0 {
+				errorMsg = fmt.Sprintf("该披风仍有 %d 个用户关联，无法删除", userAssoc)
+			} else {
+				errorMsg = fmt.Sprintf("该披风仍有 %d 个游戏档案装备，无法删除", profileCount)
+			}
+			bizErr = xError.NewError(ctx, xError.DataConflict, xError.ErrMessage(errorMsg), true, nil)
+			return bizErr
+		}
+
+		// 4. 无关联则删除披风记录
+		bizErr = t.capeRepo.DeleteByID(ctx, tx, capeID)
+		if bizErr != nil {
+			return bizErr
+		}
+
+		return nil
+	})
+	if bizErr != nil {
+		return bizErr
+	}
+	if err != nil {
+		return xError.NewError(ctx, xError.DatabaseError, "删除披风失败", true, err)
 	}
 	return nil
 }
