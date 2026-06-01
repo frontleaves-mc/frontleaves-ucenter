@@ -96,8 +96,7 @@ docker-build:
 
 # 上传到服务器
 upload:
-	@echo "🚀 正在上传到服务器$(if $(DEPLOY_SERVER), $(DEPLOY_SERVER), (默认配置))..."
-	@$(SCRIPT_DIR)/upload-to-server.sh "$(DEPLOY_SERVER)" "$(DEPLOY_USER)" "$(DEPLOY_PATH)"
+	$(SCRIPT_DIR)/upload-to-server.sh
 
 # Proto 符号链接初始化
 BASE_GO_MODULE_DIR := $(shell go list -m -f '{{.Dir}}' github.com/bamboo-services/bamboo-base-go/plugins/grpc 2>/dev/null)
