@@ -1,4 +1,36 @@
 definitions:
+  admin.AdminCapeDetailResponse:
+    properties:
+      assignment_type:
+        allOf:
+        - $ref: '#/definitions/entityType.AssignmentType'
+        description: 关联类型（mine 模式下返回）
+      equipped_profiles:
+        items:
+          $ref: '#/definitions/admin.AdminEquippedProfile'
+        type: array
+      id:
+        description: 披风库记录 ID
+        type: integer
+      is_public:
+        description: 是否公开
+        type: boolean
+      name:
+        description: 披风名称
+        type: string
+      texture_hash:
+        description: 纹理 SHA256 哈希
+        type: string
+      texture_url:
+        description: 纹理文件下载链接（由 bucket.Get 解析）
+        type: string
+      updated_at:
+        description: 更新时间
+        type: string
+      user_id:
+        description: 创建者/上传者用户 ID
+        type: integer
+    type: object
   admin.AdminCapeItem:
     properties:
       created_at:
@@ -10,6 +42,49 @@ definitions:
       name:
         type: string
       texture_url:
+        type: string
+    type: object
+  admin.AdminCreateCapeRequest:
+    properties:
+      is_public:
+        type: boolean
+      name:
+        type: string
+      texture:
+        type: string
+    required:
+    - name
+    - texture
+    type: object
+  admin.AdminCreateSkinRequest:
+    properties:
+      is_public:
+        type: boolean
+      model:
+        enum:
+        - 1
+        - 2
+        type: integer
+      name:
+        type: string
+      texture:
+        type: string
+    required:
+    - model
+    - name
+    - texture
+    type: object
+  admin.AdminEquippedProfile:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+      uuid:
         type: string
     type: object
   admin.AdminForceSetCapeRequest:
@@ -84,6 +159,42 @@ definitions:
       username:
         type: string
     type: object
+  admin.AdminSkinDetailResponse:
+    properties:
+      assignment_type:
+        allOf:
+        - $ref: '#/definitions/entityType.AssignmentType'
+        description: 关联类型（mine 模式下返回）
+      equipped_profiles:
+        items:
+          $ref: '#/definitions/admin.AdminEquippedProfile'
+        type: array
+      id:
+        description: 皮肤库记录 ID
+        type: integer
+      is_public:
+        description: 是否公开
+        type: boolean
+      model:
+        allOf:
+        - $ref: '#/definitions/entity.ModelType'
+        description: 皮肤模型 (1=classic, 2=slim)
+      name:
+        description: 皮肤名称
+        type: string
+      texture_hash:
+        description: 纹理 SHA256 哈希
+        type: string
+      texture_url:
+        description: 纹理文件下载链接（由 bucket.Get 解析）
+        type: string
+      updated_at:
+        description: 更新时间
+        type: string
+      user_id:
+        description: 创建者/上传者用户 ID
+        type: integer
+    type: object
   admin.AdminSkinItem:
     properties:
       created_at:
@@ -98,6 +209,15 @@ definitions:
       name:
         type: string
       texture_url:
+        type: string
+    type: object
+  admin.AdminUpdateCapeRequest:
+    properties:
+      is_public:
+        type: boolean
+      name:
+        type: string
+      texture:
         type: string
     type: object
   admin.AdminUpdateRoleRequest:
@@ -117,6 +237,15 @@ definitions:
       updated_at:
         type: string
       user_id:
+        type: string
+    type: object
+  admin.AdminUpdateSkinRequest:
+    properties:
+      is_public:
+        type: boolean
+      name:
+        type: string
+      texture:
         type: string
     type: object
   admin.AdminUserBasic:
@@ -3198,6 +3327,486 @@ paths:
       summary: '[玩家] 我的问题列表'
       tags:
       - 问题接口
+  /library/admin/capes:
+    get:
+      consumes:
+      - application/json
+      description: 管理员分页查询披风库列表，支持按名称、公开状态、用户、系统资源筛选
+      parameters:
+      - description: 名称模糊搜索
+        in: query
+        name: name
+        type: string
+      - description: 公开状态
+        in: query
+        name: is_public
+        type: boolean
+      - description: 创建者用户 ID
+        in: query
+        name: user_id
+        type: string
+      - description: 是否系统内置
+        in: query
+        name: is_system
+        type: boolean
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/library.CapeListResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 获取披风列表'
+      tags:
+      - 管理员-资源库接口
+    post:
+      consumes:
+      - application/json
+      description: 管理员创建系统披风，指定名称和纹理
+      parameters:
+      - description: 创建披风请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.AdminCreateCapeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/library.CapeResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "409":
+          description: 纹理哈希冲突
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 创建披风'
+      tags:
+      - 管理员-资源库接口
+  /library/admin/capes/{cape_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 管理员根据披风 ID 删除披风记录及关联资源
+      parameters:
+      - description: 披风 ID
+        in: path
+        name: cape_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "404":
+          description: 资源不存在
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 删除披风'
+      tags:
+      - 管理员-资源库接口
+    get:
+      consumes:
+      - application/json
+      description: 管理员根据披风 ID 获取详情，包含装备该披风的档案列表
+      parameters:
+      - description: 披风 ID
+        in: path
+        name: cape_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.AdminCapeDetailResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "404":
+          description: 资源不存在
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 获取披风详情'
+      tags:
+      - 管理员-资源库接口
+    patch:
+      consumes:
+      - application/json
+      description: 管理员根据披风 ID 更新披风属性，支持修改名称、公开状态和纹理
+      parameters:
+      - description: 披风 ID
+        in: path
+        name: cape_id
+        required: true
+        type: string
+      - description: 更新披风请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.AdminUpdateCapeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/library.CapeResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "404":
+          description: 资源不存在
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "409":
+          description: 纹理哈希冲突
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 更新披风'
+      tags:
+      - 管理员-资源库接口
+  /library/admin/skins:
+    get:
+      consumes:
+      - application/json
+      description: 管理员分页查询皮肤库列表，支持按名称、公开状态、用户、系统资源筛选
+      parameters:
+      - description: 名称模糊搜索
+        in: query
+        name: name
+        type: string
+      - description: 公开状态
+        in: query
+        name: is_public
+        type: boolean
+      - description: 创建者用户 ID
+        in: query
+        name: user_id
+        type: string
+      - description: 是否系统内置
+        in: query
+        name: is_system
+        type: boolean
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/library.SkinListResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 获取皮肤列表'
+      tags:
+      - 管理员-资源库接口
+    post:
+      consumes:
+      - application/json
+      description: 管理员创建系统皮肤，指定名称、模型类型和纹理
+      parameters:
+      - description: 创建皮肤请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.AdminCreateSkinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/library.SkinResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "409":
+          description: 纹理哈希冲突
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 创建皮肤'
+      tags:
+      - 管理员-资源库接口
+  /library/admin/skins/{skin_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 管理员根据皮肤 ID 删除皮肤记录及关联资源
+      parameters:
+      - description: 皮肤 ID
+        in: path
+        name: skin_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "404":
+          description: 资源不存在
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 删除皮肤'
+      tags:
+      - 管理员-资源库接口
+    get:
+      consumes:
+      - application/json
+      description: 管理员根据皮肤 ID 获取详情，包含装备该皮肤的档案列表
+      parameters:
+      - description: 皮肤 ID
+        in: path
+        name: skin_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.AdminSkinDetailResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "404":
+          description: 资源不存在
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 获取皮肤详情'
+      tags:
+      - 管理员-资源库接口
+    patch:
+      consumes:
+      - application/json
+      description: 管理员根据皮肤 ID 更新皮肤属性，支持修改名称、公开状态和纹理
+      parameters:
+      - description: 皮肤 ID
+        in: path
+        name: skin_id
+        required: true
+        type: string
+      - description: 更新皮肤请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.AdminUpdateSkinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/xBase.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/library.SkinResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "404":
+          description: 资源不存在
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+        "409":
+          description: 纹理哈希冲突
+          schema:
+            $ref: '#/definitions/xBase.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: '[管理] 更新皮肤'
+      tags:
+      - 管理员-资源库接口
   /library/admin/users/{user_id}/capes:
     get:
       consumes:
