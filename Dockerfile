@@ -12,6 +12,8 @@ WORKDIR /build
 
 RUN apk add --no-cache git ca-certificates tzdata
 
+ENV GOPROXY=https://goproxy.cn,direct
+
 COPY go.mod go.sum ./
 COPY proto/ ./proto/
 
