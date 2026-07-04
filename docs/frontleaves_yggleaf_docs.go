@@ -5071,6 +5071,114 @@ const docTemplatefrontleaves_yggleaf = `{
                 }
             }
         },
+        "/sync/neoforge/target": {
+            "get": {
+                "description": "读取当前配置的目标 NeoForge 版本号",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NeoForge"
+                ],
+                "summary": "[公开] 获取目标版本",
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/xBase.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/sync.NeoForgeTargetResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "设置当前推荐的目标 NeoForge 版本号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NeoForge"
+                ],
+                "summary": "[管理员] 设置目标版本",
+                "parameters": [
+                    {
+                        "description": "设置目标版本请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/sync.SetNeoForgeTargetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "设置成功",
+                        "schema": {
+                            "$ref": "#/definitions/xBase.BaseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/xBase.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sync/neoforge/versions": {
+            "get": {
+                "description": "代理 Maven 元数据 XML，过滤 MC 1.21.1 对应的 NeoForge 版本，Redis 缓存 30 分钟",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NeoForge"
+                ],
+                "summary": "[管理员] NeoForge 版本列表",
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/xBase.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/sync.NeoForgeVersionListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/xBase.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/sync/resourcepacks/metadata": {
             "get": {
                 "description": "递归扫描服务端 resourcepacks 目录下所有文件，返回文件列表及 SHA-256 哈希",
@@ -7018,6 +7126,72 @@ const docTemplatefrontleaves_yggleaf = `{
                 "size": {
                     "description": "文件大小（字节）",
                     "type": "integer"
+                }
+            }
+        },
+        "sync.NeoForgeTargetResponse": {
+            "type": "object",
+            "properties": {
+                "updatedAt": {
+                    "description": "目标版本最后更新时间（未设定时为零值）",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "当前设定的目标版本号（未设定时为空字符串）",
+                    "type": "string"
+                }
+            }
+        },
+        "sync.NeoForgeVersionItem": {
+            "type": "object",
+            "properties": {
+                "isLatest": {
+                    "description": "是否为最新版本",
+                    "type": "boolean"
+                },
+                "isRecommended": {
+                    "description": "是否为推荐版本（稳定版最新）",
+                    "type": "boolean"
+                },
+                "version": {
+                    "description": "版本号，如 \"21.1.235\"",
+                    "type": "string"
+                }
+            }
+        },
+        "sync.NeoForgeVersionListResponse": {
+            "type": "object",
+            "properties": {
+                "latest": {
+                    "description": "最新版本号",
+                    "type": "string"
+                },
+                "minecraftVersion": {
+                    "description": "Minecraft 基础版本",
+                    "type": "string"
+                },
+                "recommended": {
+                    "description": "推荐版本号",
+                    "type": "string"
+                },
+                "versions": {
+                    "description": "版本列表（按版本号降序排列）",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sync.NeoForgeVersionItem"
+                    }
+                }
+            }
+        },
+        "sync.SetNeoForgeTargetRequest": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "version": {
+                    "description": "目标版本号，如 \"21.1.235\"",
+                    "type": "string"
                 }
             }
         },
