@@ -17,4 +17,5 @@ const (
 	GeneForIssueReply        xSnowflake.Gene = 43 // 问题回复
 	GeneForIssueAttachment   xSnowflake.Gene = 44 // 问题附件
 	GeneForGameOnlineProfile xSnowflake.Gene = 45 // 正版档案缓存
+	GeneForConfig            xSnowflake.Gene = 46 // 通用键值对配置
 )

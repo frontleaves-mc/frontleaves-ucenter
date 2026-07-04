@@ -32,6 +32,8 @@ var migrateTables = []interface{}{
 	&entity.Issue{},
 	&entity.IssueReply{},
 	&entity.IssueAttachment{},
+	// Config System
+	&entity.Config{},
 }
 
 func (r *reg) databaseInit(ctx context.Context) (any, error) {
