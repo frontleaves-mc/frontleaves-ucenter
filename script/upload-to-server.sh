@@ -10,7 +10,7 @@ PROD_SERVER="${PROD_SERVER:-}"
 PROD_USER="${PROD_USER:-root}"
 PROD_PATH="${PROD_PATH:-/root/frontleaves-yggleaf}"
 
-TEST_SERVER="${TEST_SERVER:-172.16.100.5}"
+TEST_SERVER="${TEST_SERVER:-172.16.100.1}"
 TEST_USER="${TEST_USER:-root}"
 TEST_PATH="${TEST_PATH:-/root/frontleaves-yggleaf}"
 
