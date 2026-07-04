@@ -17,6 +17,7 @@ func (r *route) neoforgeRouter(route gin.IRouter) {
 	// 管理员接口（需认证 + 超级管理员权限）——独立 Group
 	adminGroup := route.Group("/sync/neoforge")
 	adminGroup.Use(bSdkMiddle.CheckAuth(r.context))
+	adminGroup.Use(middleware.User(r.context))
 	adminGroup.Use(middleware.SuperAdmin(r.context))
 	adminGroup.GET("/versions", nfHandler.NeoForgeVersions)
 	adminGroup.POST("/target", nfHandler.NeoForgeTargetSet)

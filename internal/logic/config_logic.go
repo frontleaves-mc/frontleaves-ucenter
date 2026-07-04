@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -113,8 +114,10 @@ func (l *ConfigLogic) GetNeoForgeVersions(ctx context.Context) (*apiSync.NeoForg
 		}
 	}
 
-	// 4. 降序排序（最新优先）
-	sort.Sort(sort.Reverse(sort.StringSlice(filtered)))
+	// 4. 降序排序（最新优先）——按 patch 段数字大小排序，避免字符串比较导致 99 > 100
+	sort.Slice(filtered, func(i, j int) bool {
+		return neoforgePatchNumber(filtered[i]) > neoforgePatchNumber(filtered[j])
+	})
 
 	// 5. 构建响应
 	versions := make([]apiSync.NeoForgeVersionItem, 0, len(filtered))
@@ -166,4 +169,11 @@ func (l *ConfigLogic) GetNeoForgeTarget(ctx context.Context) (*apiSync.NeoForgeT
 // SetNeoForgeTarget 设定 NeoForge 目标版本（upsert）。
 func (l *ConfigLogic) SetNeoForgeTarget(ctx context.Context, version string) *xError.Error {
 	return l.configRepo.Set(ctx, "neoforge", "target_version", version)
+}
+
+// neoforgePatchNumber 从版本号 "21.1.XXX" 中提取 patch 段数字，解析失败返回 0。
+func neoforgePatchNumber(version string) int {
+	patch := strings.TrimPrefix(version, bConst.NeoForgeVersionPrefix)
+	n, _ := strconv.Atoi(patch)
+	return n
 }
