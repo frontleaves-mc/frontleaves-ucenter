@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	apiSync "github.com/frontleaves-mc/frontleaves-yggleaf/api/sync"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/cache"
+	apiSync "github.com/frontleaves-mc/frontleaves-ucenter/api/sync"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/cache"
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
 )
 
 // VerifyProfileOwnership 验证角色是否属于指定用户。

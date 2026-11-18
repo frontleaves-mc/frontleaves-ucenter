@@ -1,5 +1,5 @@
 # ============================================================================
-# YggLeaf Docker 运行管理脚本 (服务器端)
+# UCenter Docker 运行管理脚本 (服务器端)
 # Frontleaves - Phalanx Labs
 #
 # 用途: 服务器端管理 Docker Compose 服务
@@ -7,8 +7,8 @@
 # ============================================================================
 
 COMPOSE_FILE ?= docker-compose.yml
-SERVICE_NAME ?= frontleaves-yggleaf
-COMPOSE_PROJECT_NAME ?= frontleaves-yggleaf
+SERVICE_NAME ?= frontleaves-ucenter
+COMPOSE_PROJECT_NAME ?= frontleaves-ucenter
 
 DOCKER_COMPOSE := docker compose -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME)
 
@@ -31,7 +31,7 @@ help:
 			" | |  | | / /\ \ | . ` | | || |  | |" \
 			" |_|  |_|/_/  \_\_|\_\_| |_||_|  |_|" \
 			"" \
-			"     YggLeaf Docker 运行管理 v1.0       " \
+			"     UCenter Docker 运行管理 v1.0       " \
 			"" \
 			"          服务器端部署脚本                    "; \
 	else \
@@ -41,7 +41,7 @@ help:
 		echo " | |  | | / /\\ \\ | . \\` | | || |  | |"; \
 		echo " |_|  |_|/_/  \\_\\_|\\_\\_| |_||_|  |_|"; \
 		echo ""; \
-		echo "     YggLeaf Docker 运行管理 v1.0       "; \
+		echo "     UCenter Docker 运行管理 v1.0       "; \
 		echo ""; \
 		echo "          服务器端部署脚本                    "; \
 	fi

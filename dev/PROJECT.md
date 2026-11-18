@@ -1,4 +1,4 @@
-# FrontLeaves YggLeaf
+# FrontLeaves UCenter
 
 **锋楪 Minecraft 用户中心微服务** — 管理用户账户、游戏档案、皮肤/披风资源库及资源配额。
 
@@ -9,7 +9,7 @@ Go 1.25.3 / Gin + GORM / PostgreSQL + Redis / S3 (纹理存储) / OAuth2 SSO
 ## 项目结构
 
 ```
-frontleaves-yggleaf/
+frontleaves-ucenter/
 ├── api/                  # 请求/响应 DTO
 ├── internal/
 │   ├── app/              # 路由、中间件、启动初始化
@@ -25,13 +25,13 @@ frontleaves-yggleaf/
 
 ## API 概览 (`/api/v1`)
 
-| 模块 | 端点 | 功能 |
-|------|------|------|
-| 用户 | `GET /user/info` | 获取当前用户 |
-| 档案 | `POST /game-profile` | 创建游戏档案 |
-| 档案 | `PATCH /game-profile/:id/username` | 修改档案名 |
-| 皮肤 | `CRUD /library/skins` | 皮肤上传/列表/更新/删除 |
-| 披风 | `CRUD /library/capes` | 披风上传/列表/更新/删除 |
+| 模块 | 端点                               | 功能                    |
+| ---- | ---------------------------------- | ----------------------- |
+| 用户 | `GET /user/info`                   | 获取当前用户            |
+| 档案 | `POST /game-profile`               | 创建游戏档案            |
+| 档案 | `PATCH /game-profile/:id/username` | 修改档案名              |
+| 皮肤 | `CRUD /library/skins`              | 皮肤上传/列表/更新/删除 |
+| 披风 | `CRUD /library/capes`              | 披风上传/列表/更新/删除 |
 
 ## 核心机制
 

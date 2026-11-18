@@ -3,7 +3,7 @@ package handler
 import (
 	xResult "github.com/bamboo-services/bamboo-base-go/major/result"
 	xUtil "github.com/bamboo-services/bamboo-base-go/common/utility"
-	apiSync "github.com/frontleaves-mc/frontleaves-yggleaf/api/sync"
+	apiSync "github.com/frontleaves-mc/frontleaves-ucenter/api/sync"
 	"github.com/gin-gonic/gin"
 )
 

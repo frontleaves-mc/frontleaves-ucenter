@@ -7,8 +7,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	xCache "github.com/bamboo-services/bamboo-base-go/major/cache"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	apiSync "github.com/frontleaves-mc/frontleaves-yggleaf/api/sync"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	apiSync "github.com/frontleaves-mc/frontleaves-ucenter/api/sync"
 )
 
 // NeoForgeVersionCache NeoForge 版本列表缓存（Redis）。

@@ -1,6 +1,6 @@
 package user
 
-import "github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
+import "github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
 
 // UserExtend 用户信息扩展字段。
 //

@@ -6,9 +6,9 @@ import (
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xHttp "github.com/bamboo-services/bamboo-base-go/defined/http"
 	xResult "github.com/bamboo-services/bamboo-base-go/major/result"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/logic"
 	"github.com/gin-gonic/gin"
 	bSdkLogic "github.com/phalanx-labs/beacon-sso-sdk/logic"
 )

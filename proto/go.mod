@@ -1,4 +1,4 @@
-module github.com/frontleaves-mc/frontleaves-yggleaf/proto
+module github.com/frontleaves-mc/frontleaves-ucenter/proto
 
 go 1.25.3
 

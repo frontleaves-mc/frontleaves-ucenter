@@ -7,7 +7,7 @@ import (
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
 	"gorm.io/gorm"
 )
 

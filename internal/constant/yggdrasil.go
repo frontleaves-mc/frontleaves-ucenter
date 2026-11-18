@@ -15,7 +15,7 @@ type RSAKeyPair struct {
 const (
 	// Yggdrasil 服务元数据
 	YggdrasilServerName         = "锋楪 · 认证"                      // 服务名称
-	YggdrasilImplementationName = "frontleaves-yggleaf"          // 实现名称
+	YggdrasilImplementationName = "frontleaves-ucenter"          // 实现名称
 	YggdrasilImplementationVer  = "1.0.0"                        // 实现版本
 	YggdrasilHomepageURL        = "https://game.frontleaves.com" // 主页地址
 	YggdrasilRegisterURL        = "https://game.frontleaves.com" // 注册地址

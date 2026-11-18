@@ -4,7 +4,7 @@ import (
 	"time"
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	apiLibrary "github.com/frontleaves-mc/frontleaves-yggleaf/api/library"
+	apiLibrary "github.com/frontleaves-mc/frontleaves-ucenter/api/library"
 )
 
 // AddGameProfileRequest 创建游戏档案请求

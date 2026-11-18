@@ -27,12 +27,12 @@ import (
 
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	bCtx "github.com/frontleaves-mc/frontleaves-yggleaf/pkg/context"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/cache"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	bCtx "github.com/frontleaves-mc/frontleaves-ucenter/pkg/context"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/cache"
 	bBucket "github.com/phalanx-labs/beacon-bucket-sdk"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/txn"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/txn"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )

@@ -4,8 +4,8 @@ import (
 	"time"
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	entityType "github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity/type"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	entityType "github.com/frontleaves-mc/frontleaves-ucenter/internal/entity/type"
 )
 
 // CreateSkinRequest 创建皮肤请求

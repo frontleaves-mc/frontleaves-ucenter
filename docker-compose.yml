@@ -1,8 +1,8 @@
-name: frontleaves-yggleaf
+name: frontleaves-ucenter
 services:
-  frontleaves-yggleaf:
-    image: ccr.ccs.tencentyun.com/frontleaves/frontleaves-yggleaf:latest
-    container_name: frontleaves-yggleaf-app
+  frontleaves-ucenter:
+    image: ccr.ccs.tencentyun.com/frontleaves/frontleaves-ucenter:latest
+    container_name: frontleaves-ucenter-app
     restart: unless-stopped
     env_file:
       - .env
@@ -32,6 +32,6 @@ services:
         max-file: "3"
 networks:
   default:
-    name: frontleaves-yggleaf-network
+    name: frontleaves-ucenter-network
   1panel-network:
     external: true

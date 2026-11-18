@@ -1,7 +1,7 @@
 package admin
 
 import (
-	library "github.com/frontleaves-mc/frontleaves-yggleaf/api/library"
+	library "github.com/frontleaves-mc/frontleaves-ucenter/api/library"
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 )
 

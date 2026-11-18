@@ -11,8 +11,8 @@ import (
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository"
 	"gorm.io/gorm"
 )
 

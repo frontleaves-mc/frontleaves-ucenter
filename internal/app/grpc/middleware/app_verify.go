@@ -3,20 +3,20 @@ package middleware
 import (
 	"context"
 
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
+	xEnv "github.com/bamboo-services/bamboo-base-go/defined/env"
 	xGrpcConst "github.com/bamboo-services/bamboo-base-go/plugins/grpc/constant"
 	xGrpcUtil "github.com/bamboo-services/bamboo-base-go/plugins/grpc/utility"
-	xEnv "github.com/bamboo-services/bamboo-base-go/defined/env"
 	"google.golang.org/grpc"
 )
 
 // UnaryAppVerify 创建 App 级认证中间件
 //
 // 验证调用方的 app-secret-key。
-// plugin 服务调用 yggleaf gRPC 接口时，必须在 metadata 中携带该字段。
+// plugin 服务调用 ucenter gRPC 接口时，必须在 metadata 中携带该字段。
 func UnaryAppVerify(ctx context.Context) grpc.UnaryServerInterceptor {
 	log := xLog.WithName(xLog.NamedMIDE, "UnaryAppVerify")
 

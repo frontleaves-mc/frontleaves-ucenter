@@ -7,7 +7,7 @@ import (
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xResult "github.com/bamboo-services/bamboo-base-go/major/result"
-	apiSync "github.com/frontleaves-mc/frontleaves-yggleaf/api/sync"
+	apiSync "github.com/frontleaves-mc/frontleaves-ucenter/api/sync"
 	"github.com/gin-gonic/gin"
 )
 

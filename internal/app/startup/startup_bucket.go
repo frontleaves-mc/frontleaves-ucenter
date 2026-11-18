@@ -6,7 +6,7 @@ import (
 
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xEnv "github.com/bamboo-services/bamboo-base-go/defined/env"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 	bBucket "github.com/phalanx-labs/beacon-bucket-sdk"
 )
 

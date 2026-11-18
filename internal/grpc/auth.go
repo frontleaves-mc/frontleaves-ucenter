@@ -8,9 +8,9 @@ import (
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xGrpcMiddle "github.com/bamboo-services/bamboo-base-go/plugins/grpc/middleware"
 	xGrpcResult "github.com/bamboo-services/bamboo-base-go/plugins/grpc/result"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/app/grpc/middleware"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	authpb "github.com/frontleaves-mc/frontleaves-yggleaf/proto/auth"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/app/grpc/middleware"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	authpb "github.com/frontleaves-mc/frontleaves-ucenter/proto/auth"
 	"google.golang.org/grpc"
 )
 

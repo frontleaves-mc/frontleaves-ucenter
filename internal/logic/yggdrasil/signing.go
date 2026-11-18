@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	yggdrasilAPI "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	yggdrasilAPI "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
 	bBucketApi "github.com/phalanx-labs/beacon-bucket-sdk/api"
 	"github.com/google/uuid"
 )

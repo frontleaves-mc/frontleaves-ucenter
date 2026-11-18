@@ -7,9 +7,9 @@ import (
 	"net"
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
-	apiYgg "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/cache"
+	apiYgg "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/cache"
 )
 
 // HasJoined 验证客户端是否成功加入服务器。

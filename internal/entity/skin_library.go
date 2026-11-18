@@ -5,7 +5,7 @@ import (
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xModels "github.com/bamboo-services/bamboo-base-go/major/models"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 	"gorm.io/gorm"
 )
 

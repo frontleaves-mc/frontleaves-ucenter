@@ -25,9 +25,9 @@ import (
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xUtil "github.com/bamboo-services/bamboo-base-go/common/utility"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	entityType "github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity/type"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	entityType "github.com/frontleaves-mc/frontleaves-ucenter/internal/entity/type"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository"
 	"gorm.io/gorm"
 )
 

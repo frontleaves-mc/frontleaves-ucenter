@@ -4,13 +4,13 @@ import (
 	"strconv"
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
-	apiIssue "github.com/frontleaves-mc/frontleaves-yggleaf/api/issue"
-	apiLibrary "github.com/frontleaves-mc/frontleaves-yggleaf/api/library"
-	apiUser "github.com/frontleaves-mc/frontleaves-yggleaf/api/user"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/models"
+	apiAdmin "github.com/frontleaves-mc/frontleaves-ucenter/api/admin"
+	apiIssue "github.com/frontleaves-mc/frontleaves-ucenter/api/issue"
+	apiLibrary "github.com/frontleaves-mc/frontleaves-ucenter/api/library"
+	apiUser "github.com/frontleaves-mc/frontleaves-ucenter/api/user"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/logic"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/models"
 )
 
 // skinDTOToResponse 将 SkinDTO 转换为 api/library.SkinResponse DTO。

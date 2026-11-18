@@ -5,7 +5,7 @@ import (
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xModels "github.com/bamboo-services/bamboo-base-go/major/models"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 )
 
 // GameOnlineProfile 正版档案缓存实体，存储从 Mojang API 获取的在线皮肤/披风信息。

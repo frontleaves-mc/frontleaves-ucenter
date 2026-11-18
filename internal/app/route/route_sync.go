@@ -1,7 +1,7 @@
 package route
 
 import (
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/handler"
 	"github.com/gin-gonic/gin"
 )
 

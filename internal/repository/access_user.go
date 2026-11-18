@@ -6,8 +6,8 @@ import (
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/cache"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/cache"
 	"github.com/redis/go-redis/v9"
 )
 

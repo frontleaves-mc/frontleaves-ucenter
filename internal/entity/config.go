@@ -3,7 +3,7 @@ package entity
 import (
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xModels "github.com/bamboo-services/bamboo-base-go/major/models"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 )
 
 // Config 通用键值对配置实体，支持按命名空间隔离不同模块的配置

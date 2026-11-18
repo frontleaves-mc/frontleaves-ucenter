@@ -7,8 +7,8 @@ import (
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xResult "github.com/bamboo-services/bamboo-base-go/major/result"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
 	"github.com/gin-gonic/gin"
 )
 

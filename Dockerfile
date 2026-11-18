@@ -1,5 +1,5 @@
 # =============================================================================
-# YggLeaf Dockerfile
+# UCenter Dockerfile
 # Frontleaves - Phalanx Labs
 # =============================================================================
 
@@ -24,7 +24,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
     -trimpath \
-    -o frontleaves-yggleaf \
+    -o frontleaves-ucenter \
     main.go
 
 # -----------------------------------------------------------------------------
@@ -39,22 +39,22 @@ RUN apk add --no-cache \
 
 ENV TZ=Asia/Shanghai
 
-RUN addgroup -g 1000 yggleaf && \
-    adduser -D -u 1000 -G yggleaf yggleaf
+RUN addgroup -g 1000 ucenter && \
+    adduser -D -u 1000 -G ucenter ucenter
 
 WORKDIR /app
 
-COPY --from=builder /build/frontleaves-yggleaf .
+COPY --from=builder /build/frontleaves-ucenter .
 COPY --from=builder /build/.env.example .env.example
 COPY --from=builder /build/template/ ./template/
 
-RUN mkdir -p /app/.logs && chown -R yggleaf:yggleaf /app
+RUN mkdir -p /app/.logs && chown -R ucenter:ucenter /app
 
-USER yggleaf
+USER ucenter
 
 EXPOSE 5577
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:5577/api/v1/health/ping || exit 1
 
-CMD ["./frontleaves-yggleaf"]
+CMD ["./frontleaves-ucenter"]

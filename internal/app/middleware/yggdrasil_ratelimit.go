@@ -12,8 +12,8 @@ import (
 
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	apiYgg "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	apiYgg "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
 	"github.com/gin-gonic/gin"
 )
 

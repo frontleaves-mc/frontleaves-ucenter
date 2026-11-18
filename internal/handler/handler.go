@@ -4,7 +4,7 @@ import (
 	"context"
 
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/logic"
 	bSdkLogic "github.com/phalanx-labs/beacon-sso-sdk/logic"
 )
 

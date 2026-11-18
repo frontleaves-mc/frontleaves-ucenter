@@ -5,7 +5,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"github.com/frontleaves-mc/frontleaves-yggleaf/docs"
+	"github.com/frontleaves-mc/frontleaves-ucenter/docs"
 	"github.com/gin-gonic/gin"
 	_ "github.com/phalanx-labs/beacon-sso-sdk/docs"
 )
@@ -22,16 +22,16 @@ import (
 // 参数说明:
 //   - r: Gin 路由组实例，用于注册 Swagger 路由。
 func swaggerRegister() func(gin.IRouter) {
-	docs.SwaggerInfofrontleaves_yggleaf.BasePath = "/api/v1"
-	docs.SwaggerInfofrontleaves_yggleaf.Title = "FrontLeavesYggleaf"
-	docs.SwaggerInfofrontleaves_yggleaf.Description = "锋楪技术（深圳）有限公司 - 我的世界用户中心"
-	docs.SwaggerInfofrontleaves_yggleaf.Version = "v1.0.0"
-	docs.SwaggerInfofrontleaves_yggleaf.Host = xEnv.GetEnvString(xEnv.Host, "localhost") + ":" + xEnv.GetEnvString(xEnv.Port, "5566")
-	docs.SwaggerInfofrontleaves_yggleaf.Schemes = []string{"http", "https"}
+	docs.SwaggerInfofrontleaves_ucenter.BasePath = "/api/v1"
+	docs.SwaggerInfofrontleaves_ucenter.Title = "FrontLeavesUCenter"
+	docs.SwaggerInfofrontleaves_ucenter.Description = "锋楪技术（深圳）有限公司 - 我的世界用户中心"
+	docs.SwaggerInfofrontleaves_ucenter.Version = "v1.0.0"
+	docs.SwaggerInfofrontleaves_ucenter.Host = xEnv.GetEnvString(xEnv.Host, "localhost") + ":" + xEnv.GetEnvString(xEnv.Port, "5566")
+	docs.SwaggerInfofrontleaves_ucenter.Schemes = []string{"http", "https"}
 
 	return func(r gin.IRouter) {
 		swaggerGroup := r.Group("/swagger")
-		swaggerGroup.GET("/yggleaf/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.InstanceName("frontleaves_yggleaf")))
+		swaggerGroup.GET("/ucenter/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.InstanceName("frontleaves_ucenter")))
 		swaggerGroup.GET("/sso/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.InstanceName("beacon_sso_sdk")))
 	}
 }

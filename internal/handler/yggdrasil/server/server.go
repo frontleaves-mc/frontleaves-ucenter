@@ -11,10 +11,10 @@ import (
 	"net/http"
 	"strconv"
 
-	apiYgg "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic/yggdrasil"
-	ygghandler "github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler/yggdrasil"
+	apiYgg "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/logic/yggdrasil"
+	ygghandler "github.com/frontleaves-mc/frontleaves-ucenter/internal/handler/yggdrasil"
 	"github.com/gin-gonic/gin"
 )
 

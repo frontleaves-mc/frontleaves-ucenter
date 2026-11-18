@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 
 	xEnv "github.com/bamboo-services/bamboo-base-go/defined/env"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 )
 
 // LoadRSAKeyPair 加载或生成 Yggdrasil RSA 签名密钥对。

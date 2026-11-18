@@ -6,7 +6,7 @@ import (
 	xCtx "github.com/bamboo-services/bamboo-base-go/defined/context"
 	xRegNode "github.com/bamboo-services/bamboo-base-go/major/register/node"
 	xEmail "github.com/bamboo-services/bamboo-base-go/plugins/email"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 	bSdkStartup "github.com/phalanx-labs/beacon-sso-sdk/startup"
 )
 

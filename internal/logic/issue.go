@@ -15,15 +15,15 @@ import (
 	xEnv "github.com/bamboo-services/bamboo-base-go/defined/env"
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/models"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository"
-	repocache "github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/cache"
-	repotxn "github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/txn"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/models"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository"
+	repocache "github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/cache"
+	repotxn "github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/txn"
 	bBucketApi "github.com/phalanx-labs/beacon-bucket-sdk/api"
 	bBucket "github.com/phalanx-labs/beacon-bucket-sdk"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	bCtx "github.com/frontleaves-mc/frontleaves-yggleaf/pkg/context"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	bCtx "github.com/frontleaves-mc/frontleaves-ucenter/pkg/context"
 )
 
 const (

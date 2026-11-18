@@ -26,7 +26,7 @@ PROTO_MODULE := proto
 # ============================================================
 
 help:
-	@echo "锋楪YggLeaf - 可用命令"
+	@echo "锋楪UCenter - 可用命令"
 	@echo ""
 	@echo "开发命令:"
 	@echo "  make swag                     - 生成 Swagger 文档"
@@ -57,7 +57,7 @@ help:
 
 # 提取出的 Swagger 生成目标
 swag:
-	$(SWAG_CMD) init --instanceName frontleaves_yggleaf -g $(MAIN_FILE) --parseDependency
+	$(SWAG_CMD) init --instanceName frontleaves_ucenter -g $(MAIN_FILE) --parseDependency
 
 # 提取出的运行目标
 run:

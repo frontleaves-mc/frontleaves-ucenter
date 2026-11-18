@@ -4,8 +4,8 @@ import (
 	"time"
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 )
 
 // IssueDTO 问题数据传输对象（Logic 层构建，Handler 层转换为 Response）。

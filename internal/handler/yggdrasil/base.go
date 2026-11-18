@@ -9,7 +9,7 @@ import (
 	"context"
 
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic/yggdrasil"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/logic/yggdrasil"
 )
 
 // yggdrasilService Yggdrasil 协议核心业务逻辑服务。

@@ -3,7 +3,7 @@ package entity
 import (
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xModels "github.com/bamboo-services/bamboo-base-go/major/models"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 )
 
 // LibraryQuota 皮肤库与披风库共享配额实体，记录用户在不同资源类型下的额度使用情况。

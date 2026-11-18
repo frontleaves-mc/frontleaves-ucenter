@@ -4,7 +4,7 @@ import (
 	"time"
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	entityType "github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity/type"
+	entityType "github.com/frontleaves-mc/frontleaves-ucenter/internal/entity/type"
 )
 
 // CreateCapeRequest 创建披风请求

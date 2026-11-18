@@ -1,8 +1,8 @@
 package route
 
 import (
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/app/middleware"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/app/middleware"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/handler"
 	"github.com/gin-gonic/gin"
 	bSdkMiddle "github.com/phalanx-labs/beacon-sso-sdk/middleware"
 )

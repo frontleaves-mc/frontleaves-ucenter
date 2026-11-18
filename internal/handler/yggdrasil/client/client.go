@@ -14,9 +14,9 @@ import (
 	"net/http"
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
-	apiYgg "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
-	ygghandler "github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler/yggdrasil"
-	yggLogic "github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic/yggdrasil"
+	apiYgg "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
+	ygghandler "github.com/frontleaves-mc/frontleaves-ucenter/internal/handler/yggdrasil"
+	yggLogic "github.com/frontleaves-mc/frontleaves-ucenter/internal/logic/yggdrasil"
 	"github.com/gin-gonic/gin"
 )
 

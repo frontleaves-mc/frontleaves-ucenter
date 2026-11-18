@@ -5,8 +5,8 @@ import (
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xUtil "github.com/bamboo-services/bamboo-base-go/common/utility"
 	xResult "github.com/bamboo-services/bamboo-base-go/major/result"
-	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
-	apiLibrary "github.com/frontleaves-mc/frontleaves-yggleaf/api/library"
+	apiAdmin "github.com/frontleaves-mc/frontleaves-ucenter/api/admin"
+	apiLibrary "github.com/frontleaves-mc/frontleaves-ucenter/api/library"
 	"github.com/gin-gonic/gin"
 )
 

@@ -5,7 +5,7 @@ import (
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 	bBucket "github.com/phalanx-labs/beacon-bucket-sdk"
 )
 

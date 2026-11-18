@@ -5,7 +5,7 @@ import (
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xModels "github.com/bamboo-services/bamboo-base-go/major/models"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 )
 
 // GameTokenStatus 游戏令牌状态类型，用于标识 Yggdrasil 游戏令牌的当前生命周期阶段。

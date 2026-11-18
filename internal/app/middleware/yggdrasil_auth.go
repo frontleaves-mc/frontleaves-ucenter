@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	apiYgg "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic/yggdrasil"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	apiYgg "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/logic/yggdrasil"
 	"github.com/gin-gonic/gin"
 )
 

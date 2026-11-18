@@ -4,9 +4,9 @@ import (
 	"context"
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
-	apiYgg "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
+	apiYgg "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
 )
 
 // QueryProfile 根据无符号 UUID 查询角色属性信息。

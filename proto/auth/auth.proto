@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package frontleaves.auth.v1;
 
-option go_package = "github.com/frontleaves-mc/frontleaves-yggleaf/proto/auth;authpb";
+option go_package = "github.com/frontleaves-mc/frontleaves-ucenter/proto/auth;authpb";
 
 import "link/base.proto";
 

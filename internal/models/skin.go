@@ -4,8 +4,8 @@ import (
 	"time"
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	entityType "github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity/type"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	entityType "github.com/frontleaves-mc/frontleaves-ucenter/internal/entity/type"
 )
 
 // SkinDTO 皮肤数据传输对象。

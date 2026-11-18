@@ -4,7 +4,7 @@ import (
 	"context"
 
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/app/startup/prepare"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/app/startup/prepare"
 )
 
 // businessDataPrepare 初始化业务数据。

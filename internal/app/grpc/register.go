@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 
-	grpchandler "github.com/frontleaves-mc/frontleaves-yggleaf/internal/grpc"
+	grpchandler "github.com/frontleaves-mc/frontleaves-ucenter/internal/grpc"
 	"google.golang.org/grpc"
 )
 

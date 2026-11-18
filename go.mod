@@ -1,4 +1,4 @@
-module github.com/frontleaves-mc/frontleaves-yggleaf
+module github.com/frontleaves-mc/frontleaves-ucenter
 
 go 1.25.3
 
@@ -10,7 +10,7 @@ require (
 	github.com/bamboo-services/bamboo-base-go/plugins/async v1.0.0-202604270654
 	github.com/bamboo-services/bamboo-base-go/plugins/email v1.0.0-202605032001
 	github.com/bamboo-services/bamboo-base-go/plugins/grpc v1.0.0-202605031602
-	github.com/frontleaves-mc/frontleaves-yggleaf/proto v0.0.0
+	github.com/frontleaves-mc/frontleaves-ucenter/proto v0.0.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/uuid v1.6.0
 	github.com/phalanx-labs/beacon-bucket-sdk v1.0.0-202604170444
@@ -84,4 +84,4 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 )
 
-replace github.com/frontleaves-mc/frontleaves-yggleaf/proto => ./proto
+replace github.com/frontleaves-mc/frontleaves-ucenter/proto => ./proto

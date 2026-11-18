@@ -8,9 +8,9 @@ import (
 	xReg "github.com/bamboo-services/bamboo-base-go/major/register"
 	xGrpcIUnary "github.com/bamboo-services/bamboo-base-go/plugins/grpc/interceptor/unary"
 	xGrpcRunner "github.com/bamboo-services/bamboo-base-go/plugins/grpc/runner"
-	grpcApp "github.com/frontleaves-mc/frontleaves-yggleaf/internal/app/grpc"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/app/route"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/app/startup"
+	grpcApp "github.com/frontleaves-mc/frontleaves-ucenter/internal/app/grpc"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/app/route"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/app/startup"
 	"google.golang.org/grpc"
 )
 

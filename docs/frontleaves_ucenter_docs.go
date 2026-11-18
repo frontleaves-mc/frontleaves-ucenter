@@ -3,7 +3,7 @@ package docs
 
 import "github.com/swaggo/swag"
 
-const docTemplatefrontleaves_yggleaf = `{
+const docTemplatefrontleaves_ucenter = `{
     "schemes": {{ marshal .Schemes }},
     "swagger": "2.0",
     "info": {
@@ -7806,20 +7806,20 @@ const docTemplatefrontleaves_yggleaf = `{
     }
 }`
 
-// SwaggerInfofrontleaves_yggleaf holds exported Swagger Info so clients can modify it
-var SwaggerInfofrontleaves_yggleaf = &swag.Spec{
+// SwaggerInfofrontleaves_ucenter holds exported Swagger Info so clients can modify it
+var SwaggerInfofrontleaves_ucenter = &swag.Spec{
 	Version:          "",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "",
 	Description:      "",
-	InfoInstanceName: "frontleaves_yggleaf",
-	SwaggerTemplate:  docTemplatefrontleaves_yggleaf,
+	InfoInstanceName: "frontleaves_ucenter",
+	SwaggerTemplate:  docTemplatefrontleaves_ucenter,
 	LeftDelim:        "{{",
 	RightDelim:       "}}",
 }
 
 func init() {
-	swag.Register(SwaggerInfofrontleaves_yggleaf.InstanceName(), SwaggerInfofrontleaves_yggleaf)
+	swag.Register(SwaggerInfofrontleaves_ucenter.InstanceName(), SwaggerInfofrontleaves_ucenter)
 }

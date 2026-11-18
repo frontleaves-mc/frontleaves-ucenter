@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================================
-# YggLeaf Docker 构建脚本 (Frontleaves - Phalanx Labs)
+# UCenter Docker 构建脚本 (Frontleaves - Phalanx Labs)
 # 使用 gum 美化输出
 # ============================================================================
 
@@ -121,7 +121,7 @@ SPECIFIED_VERSION=$3
 
 REGISTRY="ccr.ccs.tencentyun.com"
 NAMESPACE="frontleaves"
-IMAGE_NAME="frontleaves-yggleaf"
+IMAGE_NAME="frontleaves-ucenter"
 TARGET_PLATFORM="linux/amd64"
 
 print_banner
@@ -199,7 +199,7 @@ print_step "3/5" "更新 Swagger 文档"
 
 if command -v swag &> /dev/null; then
     log_info "正在生成 Swagger 文档..."
-    if swag init --instanceName frontleaves_yggleaf -g main.go --parseDependency 2>/dev/null; then
+    if swag init --instanceName frontleaves_ucenter -g main.go --parseDependency 2>/dev/null; then
         log_success "Swagger 文档生成成功"
     else
         log_warn "Swagger 文档生成失败，继续构建..."

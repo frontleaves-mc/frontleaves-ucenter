@@ -10,10 +10,10 @@ import (
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/models"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository"
-	repotxn "github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository/txn"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/models"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository"
+	repotxn "github.com/frontleaves-mc/frontleaves-ucenter/internal/repository/txn"
 	"github.com/google/uuid"
 )
 

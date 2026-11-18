@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
+	apiAdmin "github.com/frontleaves-mc/frontleaves-ucenter/api/admin"
 )
 
 // TestAdminCreateSkin_HashConflict 验证 AdminCreateSkin 在纹理哈希冲突时返回 DataConflict 错误。

@@ -12,7 +12,7 @@ import (
 
 	xError "github.com/bamboo-services/bamboo-base-go/common/error"
 	xLog "github.com/bamboo-services/bamboo-base-go/common/log"
-	apiSync "github.com/frontleaves-mc/frontleaves-yggleaf/api/sync"
+	apiSync "github.com/frontleaves-mc/frontleaves-ucenter/api/sync"
 )
 
 const (

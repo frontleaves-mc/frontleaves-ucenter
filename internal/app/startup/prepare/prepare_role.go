@@ -1,7 +1,7 @@
 package prepare
 
 import (
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
 )
 
 // prepareRole 初始化并保存系统默认的角色数据

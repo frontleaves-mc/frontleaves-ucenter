@@ -1,12 +1,12 @@
 package route
 
 import (
-	yggmiddleware "github.com/frontleaves-mc/frontleaves-yggleaf/internal/app/middleware"
-	ygghandler "github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler/yggdrasil"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler/yggdrasil/server"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler/yggdrasil/client"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler/yggdrasil/share"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	yggmiddleware "github.com/frontleaves-mc/frontleaves-ucenter/internal/app/middleware"
+	ygghandler "github.com/frontleaves-mc/frontleaves-ucenter/internal/handler/yggdrasil"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/handler/yggdrasil/server"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/handler/yggdrasil/client"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/handler/yggdrasil/share"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 	"github.com/gin-gonic/gin"
 )
 

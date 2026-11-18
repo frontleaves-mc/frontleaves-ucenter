@@ -11,10 +11,10 @@ import (
 	xUtil "github.com/bamboo-services/bamboo-base-go/common/utility"
 	xCtxUtil "github.com/bamboo-services/bamboo-base-go/common/utility/context"
 	xModels "github.com/bamboo-services/bamboo-base-go/major/models"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/repository"
-	apiAdmin "github.com/frontleaves-mc/frontleaves-yggleaf/api/admin"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/api/user"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/repository"
+	apiAdmin "github.com/frontleaves-mc/frontleaves-ucenter/api/admin"
+	"github.com/frontleaves-mc/frontleaves-ucenter/api/user"
 	bSdkModels "github.com/phalanx-labs/beacon-sso-sdk/models"
 )
 

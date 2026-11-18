@@ -11,11 +11,11 @@ import (
 	"strings"
 
 	xEnv "github.com/bamboo-services/bamboo-base-go/defined/env"
-	apiYgg "github.com/frontleaves-mc/frontleaves-yggleaf/api/yggdrasil"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/entity"
-	ygghandler "github.com/frontleaves-mc/frontleaves-yggleaf/internal/handler/yggdrasil"
-	"github.com/frontleaves-mc/frontleaves-yggleaf/internal/logic/yggdrasil"
+	apiYgg "github.com/frontleaves-mc/frontleaves-ucenter/api/yggdrasil"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/entity"
+	ygghandler "github.com/frontleaves-mc/frontleaves-ucenter/internal/handler/yggdrasil"
+	"github.com/frontleaves-mc/frontleaves-ucenter/internal/logic/yggdrasil"
 	"github.com/gin-gonic/gin"
 )
 

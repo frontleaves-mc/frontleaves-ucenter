@@ -1,13 +1,13 @@
 ---
 name: entity-build
 description: 根据口头描述快速生成符合项目规范的 Go Entity 代码。当用户说"创建一个实体"、"添加 entity"、"新建数据模型"或类似请求时自动激活。
-argument-hint: [ entity-name ]
+argument-hint: [entity-name]
 allowed-tools: Read, Write, Edit, AskUserQuestion
 ---
 
 # Entity 构建技能 (fyl-entity-build)
 
-嘿~ 需要创建新的 Entity 吗？只需口头描述一下，我就能帮你生成符合 frontleaves-yggleaf 项目规范的 Go 实体代码！ (´∀｀)
+嘿~ 需要创建新的 Entity 吗？只需口头描述一下，我就能帮你生成符合 frontleaves-ucenter 项目规范的 Go 实体代码！ (´∀｀)
 
 ## 快速开始
 
@@ -28,37 +28,37 @@ fyl-entity-build 创建一个 Player 实体，包含 UUID、Name、Level 字段�
 当你说「创建一个实体」时，我会：
 
 1. **收集基本信息**
-    - 实体名称（自动转为 PascalCase）
-    - 实体描述（中文）
+   - 实体名称（自动转为 PascalCase）
+   - 实体描述（中文）
 
 2. **询问字段定义**
-    - 字段名、类型、是否可空
-    - 特殊要求（唯一索引、默认值等）
+   - 字段名、类型、是否可空
+   - 特殊要求（唯一索引、默认值等）
 
 3. **询问关联关系**（可选）
-    - 是否属于其他实体（belongs_to）
-    - 是否拥有多个子实体（has_many）
+   - 是否属于其他实体（belongs_to）
+   - 是否拥有多个子实体（has_many）
 
 4. **生成代码**
-    - 输出到 `internal/entity/<snake_case>.go`
-    - 所有字段行必须追加行尾注释（`// 中文说明`）
-    - 提醒 Gene 常量定义
+   - 输出到 `internal/entity/<snake_case>.go`
+   - 所有字段行必须追加行尾注释（`// 中文说明`）
+   - 提醒 Gene 常量定义
 
 ---
 
 ## 支持的字段类型
 
-| 描述                       | Go 类型                    | 说明      |
-|--------------------------|--------------------------|---------|
-| `string`                 | `string`                 | 字符串     |
-| `int`                    | `int`                    | 整数      |
-| `int64`                  | `int64`                  | 64位整数   |
-| `uint`                   | `uint`                   | 无符号整数   |
+| 描述                     | Go 类型                  | 说明        |
+| ------------------------ | ------------------------ | ----------- |
+| `string`                 | `string`                 | 字符串      |
+| `int`                    | `int`                    | 整数        |
+| `int64`                  | `int64`                  | 64位整数    |
+| `uint`                   | `uint`                   | 无符号整数  |
 | `xSnowflake.SnowflakeID` | `xSnowflake.SnowflakeID` | 雪花算法 ID |
-| `bool`                   | `bool`                   | 布尔值     |
-| `float`                  | `float64`                | 浮点数     |
-| `time`                   | `time.Time`              | 时间戳     |
-| `decimal`                | `float64`                | 小数      |
+| `bool`                   | `bool`                   | 布尔值      |
+| `float`                  | `float64`                | 浮点数      |
+| `time`                   | `time.Time`              | 时间戳      |
+| `decimal`                | `float64`                | 小数        |
 
 ---
 
@@ -105,26 +105,26 @@ questions:
 
 ### 询问时机
 
-| 情况       | 询问内容                        |
-|----------|-----------------------------|
-| 字段类型不明确  | 确认 Go 类型（string/int/bool 等） |
-| 字段约束不明确  | 确认是否 unique、not null、默认值    |
-| 关系不明确    | 确认是否属于其他实体、是否有一对多关系         |
-| Gene 不明确 | 确认使用内置 Gene 还是自定义           |
+| 情况           | 询问内容                               |
+| -------------- | -------------------------------------- |
+| 字段类型不明确 | 确认 Go 类型（string/int/bool 等）     |
+| 字段约束不明确 | 确认是否 unique、not null、默认值      |
+| 关系不明确     | 确认是否属于其他实体、是否有一对多关系 |
+| Gene 不明确    | 确认使用内置 Gene 还是自定义           |
 
 ---
 
 ## 常用字段模板
 
-| 场景     | GORM 标签                                                 | JSON 标签                       |
-|--------|---------------------------------------------------------|-------------------------------|
-| 非空字符串  | `gorm:"not null;type:varchar(255);comment:说明"`          | `json:"field_name"`           |
-| 可空字符串  | `gorm:"type:varchar(512);comment:说明"`                   | `json:"field_name,omitempty"` |
-| 唯一字符串  | `gorm:"unique;not null;type:varchar(36);comment:说明"`    | `json:"field_name"`           |
-| 整数     | `gorm:"not null;default:1;comment:说明"`                  | `json:"field_name"`           |
-| 布尔     | `gorm:"not null;type:boolean;default:false;comment:说明"` | `json:"field_name"`           |
-| 时间戳    | `gorm:"type:timestamptz;comment:说明"`                    | `json:"field_name,omitempty"` |
-| 外键     | `gorm:"not null;index:idx_user_id;comment:说明"`          | `json:"user_id"`              |
+| 场景         | GORM 标签                                                 | JSON 标签                     |
+| ------------ | --------------------------------------------------------- | ----------------------------- |
+| 非空字符串   | `gorm:"not null;type:varchar(255);comment:说明"`          | `json:"field_name"`           |
+| 可空字符串   | `gorm:"type:varchar(512);comment:说明"`                   | `json:"field_name,omitempty"` |
+| 唯一字符串   | `gorm:"unique;not null;type:varchar(36);comment:说明"`    | `json:"field_name"`           |
+| 整数         | `gorm:"not null;default:1;comment:说明"`                  | `json:"field_name"`           |
+| 布尔         | `gorm:"not null;type:boolean;default:false;comment:说明"` | `json:"field_name"`           |
+| 时间戳       | `gorm:"type:timestamptz;comment:说明"`                    | `json:"field_name,omitempty"` |
+| 外键         | `gorm:"not null;index:idx_user_id;comment:说明"`          | `json:"user_id"`              |
 | 密码（敏感） | `gorm:"not null;type:varchar(255);comment:说明"`          | `json:"-"`                    |
 
 ---
@@ -175,9 +175,9 @@ return xSnowflake.GeneUser // 内置类型
 
 ### 常用 Gene 类型
 
-| Gene 值                      | 用途       |
-|-----------------------------|----------|
-| `xSnowflake.GeneUser`       | 用户实体     |
+| Gene 值                     | 用途           |
+| --------------------------- | -------------- |
+| `xSnowflake.GeneUser`       | 用户实体       |
 | `xSnowflake.GeneDefault`    | 默认/通用实体  |
 | `bConst.GeneForGameProfile` | 游戏档案（32） |
 
@@ -208,7 +208,7 @@ import (
 
 	xModels "github.com/bamboo-services/bamboo-base-go/major/models"
 	xSnowflake "github.com/bamboo-services/bamboo-base-go/common/snowflake"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 )
 
 // Player 玩家实体，包含 UUID、名称、等级等游戏内信息。
@@ -263,10 +263,10 @@ GeneForPlayer      xSnowflake.Gene = 64 // 新增
 
 ### 查询示例
 
-| 需要查找的内容           | 查询 URL                                              |
-|-------------------|-----------------------------------------------------|
+| 需要查找的内容      | 查询 URL                                            |
+| ------------------- | --------------------------------------------------- |
 | BaseEntity 定义     | https://doc.x-lf.com/llms.mdx/models/base_entity.go |
 | Snowflake Gene 类型 | https://doc.x-lf.com/llms.mdx/snowflake/gene.go     |
-| 所有可导出类型           | https://doc.x-lf.com/llms.txt                       |
+| 所有可导出类型      | https://doc.x-lf.com/llms.txt                       |
 
 嘿嘿~ 开始创建你的 Entity 吧！＼(^o^)／

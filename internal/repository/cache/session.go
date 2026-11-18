@@ -8,7 +8,7 @@ import (
 	"time"
 
 	xCache "github.com/bamboo-services/bamboo-base-go/major/cache"
-	bConst "github.com/frontleaves-mc/frontleaves-yggleaf/internal/constant"
+	bConst "github.com/frontleaves-mc/frontleaves-ucenter/internal/constant"
 	"github.com/redis/go-redis/v9"
 )
 
